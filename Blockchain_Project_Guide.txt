@@ -1,0 +1,227 @@
+================================================================================
+  BLOCKCHAIN-LITE LEDGER & DIGITAL WALLET — COMPLETE SYSTEM GUIDE & VIVA NOTES
+  COEP Technological University · Department of Computer Science and Engineering
+================================================================================
+
+--------------------------------------------------------------------------------
+1. CORE ARCHITECTURE & DESIGN PHILOSOPHY
+--------------------------------------------------------------------------------
+Is project me koi external third-party cryptography library (jaise pycryptodome,
+cryptography, web3, database ORM, ya web frameworks) use NAHI hui hai.
+Poora system Python Standard Library aur Mathematical First-Principles par
+scratch se banaya gaya hai:
+
+  1. UTXO MODEL (Unspent Transaction Output):
+     - Bitcoin ki tarah balance ek simple counter ya account number nahi hota.
+     - Coins "unspent chunks" ke roop me persist hote hain.
+     - Balance = Saare unspent outputs ka total sum jo aapke address par hain.
+
+  2. ASYMMETRIC CRYPTOGRAPHY (RSA):
+     - Modular Arithmetic (Extended Euclidean Algorithm, Fast Modulo Exponentiation).
+     - Miller-Rabin 40-round primality test (Carmichael numbers rejection).
+     - Public key se public address generate hota hai.
+     - Private key se client-side transaction sign hota hai.
+
+  3. BIT-LEVEL SHA-256 (DLCO Layer):
+     - FIPS 180-4 compliant SHA-256 engine with 32-bit bitwise logic.
+     - Bitwise operations: Ch, Maj, Sigma0, Sigma1, sigma0, sigma1.
+     - Strict Avalanche Criterion verify karta hai (1 bit flip -> ~50% digest flip).
+
+  4. BINARY MERKLE TREE (DSA Layer):
+     - Transactions ko O(log2 N) light-client inclusion proofs me verify karta hai.
+     - Domain separation prefixes: 0x00 for leaves, 0x01 for internal nodes.
+
+  5. NAKAMOTO CONSENSUS & PROOF-OF-WORK (Consensus Layer):
+     - Hash difficulty schedule (leading zero bits).
+     - Longest cumulative-work fork resolution.
+     - Coinbase uniqueness commitment aur deterministic block reward.
+
+
+================================================================================
+2. TERMINAL CONSOLE — DETAILED EXPLANATION OF EVERY OPTION [0 - 9]
+================================================================================
+
+--------------------------------------------------------------------------------
+[1] Chain Status — Ledger Integrity & State Metrics
+--------------------------------------------------------------------------------
+* Kaam Kya Karta Hai:
+  Current blockchain ki health aur consensus parameters ka full overview deta hai.
+
+* Behind-the-Scenes Mechanics:
+  1. Full Chain Validation: Genesis block (#0) se tip block (#N) tak har block ka
+     hash recalculate hota hai. Dekha jata hai ki:
+     block[i].previous_hash == block[i-1].block_hash
+  2. Cumulative Work Calculation: Nakamoto consensus rule ke tehat cumulative
+     work calculate hoti hai: Total Work = Sum(2^difficulty).
+  3. Mempool Scan: Dekhta hai kitne transactions memory pool me unmined pade hain.
+  4. Tip Header Metrics: Tip block ka index, block hash, previous hash, Merkle root,
+     aur winning nonce print karta hai.
+
+
+--------------------------------------------------------------------------------
+[2] Explore Blocks — Block Anatomy & Transaction Inspector
+--------------------------------------------------------------------------------
+* Kaam Kya Karta Hai:
+  Real-world Bitcoin block explorer (jaise Blockchain.com) ki tarah kaam karta hai.
+
+* Behind-the-Scenes Mechanics:
+  1. Har block me 88-Byte Header hota hai:
+     - Version (4 bytes, uint32)
+     - Previous Block Hash (32 bytes SHA-256)
+     - Merkle Root (32 bytes SHA-256)
+     - Timestamp (8 bytes, uint64 unix seconds)
+     - Difficulty Target (4 bytes, uint32 zero bits)
+     - Nonce (8 bytes, uint64)
+  2. Block Transactions ke 2 Types hote hain:
+     - COINBASE Tx (Index 0): Naye coins mint karta hai. Block reward (50 coins)
+       + block me transfer fees miner ko milti hain.
+     - TRANSFER Tx (Index 1 to N): Users ke beech coins bhejta hai. Inputs
+       purane UTXOs ko consume karte hain aur naye outputs generate karte hain.
+
+
+--------------------------------------------------------------------------------
+[3] Wallets & Balance — UTXO Hash-Map Engine
+--------------------------------------------------------------------------------
+* Kaam Kya Karta Hai:
+  Demo wallets (Alice, Bob, Charlie, Miner) ke balances aur UTXOs dikhata hai.
+
+* Behind-the-Scenes Mechanics:
+  1. Ledger ke paas ek fast UTXOSet (Hash-Map) hota hai:
+     Key: (tx_id, output_index) -> Value: UTXOEntry(amount, recipient_address)
+  2. Balance Calculation:
+     Balance = Sum of all unspent UTXOs belonging to that address.
+  3. No Double-Spending Guarantee:
+     Jaise hi koi UTXO transaction me consume hota hai, wo hash map se delete
+     ho jata hai, isliye wahi coin dubara spend karna mathematically impossible hai.
+
+
+--------------------------------------------------------------------------------
+[4] Send Transfer — Cryptographic Signing & Mempool Queuing
+--------------------------------------------------------------------------------
+* Kaam Kya Karta Hai:
+  Ek wallet se dusre wallet me coins transfer karta hai with RSA digital signature.
+
+* Behind-the-Scenes Mechanics:
+  1. Coin Selection: Sender ke address se unspent UTXOs uthata hai.
+  2. Change Output Computation:
+     Agar Alice ke paas 100 ka UTXO hai aur wo 15 coins bhej rahi hai (+ 1 fee):
+     Total (100) - Transfer (15) - Fee (1) = 84 coins wapas Alice ko change output
+     ke roop me milte hain.
+  3. Canonical Serialization: Big-Endian binary format me transaction preimage
+     create hota hai.
+  4. RSA Digital Signature: Sender ki RSA Private Key se sign hota hai:
+     Signature = (Hash(Preimage))^d mod n
+  5. Mempool Submission: Ledger verify karta hai ki signature valid hai, UTXOs
+     available hain aur double-spent nahi hain, fir transaction Mempool me jata hai.
+
+
+--------------------------------------------------------------------------------
+[5] Mine Block — Proof-of-Work (PoW) Engine
+--------------------------------------------------------------------------------
+* Kaam Kya Karta Hai:
+  Mempool ke transactions ko bundle karke computational Proof-of-Work se naya
+  block seal karta hai.
+
+* Behind-the-Scenes Mechanics:
+  1. Mempool se valid transactions select karta hai.
+  2. Miner ke liye 50 coins ka Coinbase Transaction generate karta hai.
+  3. Transactions ka Merkle Tree banakar Merkle Root nikalta hai.
+  4. Nonce Search Loop:
+     Nonce 0 se shuru karke tab tak iterate hota hai jab tak:
+     SHA-256(BlockHeader(nonce)) ke starting me Target Difficulty (e.g. 4 bits)
+     zeros na aa jayein.
+  5. Winning Nonce milte hi block chain me judta hai, miner ko coins milte hain,
+     aur mempool clear ho jata hai.
+
+
+--------------------------------------------------------------------------------
+[6] Verify Merkle Proof — SPV Light-Client Proof Verification
+--------------------------------------------------------------------------------
+* Kaam Kya Karta Hai:
+  Bina pura blockchain download kiye kisi specific transaction ki authenticity
+  verify karta hai (Simple Payment Verification - SPV).
+
+* Behind-the-Scenes Mechanics:
+  1. Binary Merkle Tree: Block ke transactions ke hashes ko pair karke root banta hai.
+  2. O(log2 N) Path: 10 lakh transactions wale block me bhi kisi transaction ko
+     verify karne ke liye sirf ~20 sibling hashes ki zaroorat hoti hai.
+  3. Authentication Steps:
+     Leaf Hash -> Sibling 1 Hash -> Sibling 2 Hash -> ... -> Computed Root.
+  4. Agar Computed Root == Block Header ka Merkle Root, toh transaction 100%
+     valid aur tamper-proof confirm ho jata hai.
+
+
+--------------------------------------------------------------------------------
+[7] Simulate Tamper — Cryptographic Cascade Failure Demo
+--------------------------------------------------------------------------------
+* Kaam Kya Karta Hai:
+  Viva ka sabse powerful demo! Yeh mathematically prove karta hai ki blockchain
+  me data tamper/modify karna kyu impossible hai.
+
+* Behind-the-Scenes Mechanics (1-Byte Tamper Cascade):
+  Block #1 ke transaction me sirf 1 byte change ki jati hai (e.g. amount 20 -> 9999):
+  1. RSA Signature Check: FAILS! (Tampered data ka hash signature se match nahi karta).
+  2. TxID: Completely change ho jata hai (Avalanche effect).
+  3. Merkle Root: Recomputed Merkle Root block header ke root se mismatch ho jata hai.
+  4. PoW Hash Invalidation: Header badal gaya, isliye Block #1 ka Proof-of-Work toot gaya.
+  5. Chain Breakage: Block #2 ka 'previous_hash' ab Block #1 ke naye hash se match nahi karta.
+  6. Consensus Verdict: Validator TamperDetectedError throw karta hai aur fraud reject ho jata hai.
+
+
+--------------------------------------------------------------------------------
+[8] Run Full Demo — 6-Stage Automated Viva Evaluation
+--------------------------------------------------------------------------------
+* Kaam Kya Karta Hai:
+  Ek command me 6 academic worklet stages automated run karta hai:
+  - Stage 1 (Discrete Math): Miller-Rabin primality test & RSA key generation.
+  - Stage 2 (Client-Server): TCP Socket RPC par ledger-wallet architecture.
+  - Stage 3 (Bit Hashing): SHA-256 Avalanche effect test (1 bit flip -> 50% digest change).
+  - Stage 4 (Double-Spend Shield): Same UTXO ko do bar kharch karne ki koshish rokna.
+  - Stage 5 (Tamper & Persistence): Disk reload aur SHA-256 integrity seal check.
+  - Stage 6 (PoW Statistics): Mining difficulty vs time distribution.
+
+
+--------------------------------------------------------------------------------
+[9] PoW Benchmark — Mining Profiler (Difficulty vs Time)
+--------------------------------------------------------------------------------
+* Kaam Kya Karta Hai:
+  Algorithmic complexity demonstrate karta hai:
+  Har 1 bit difficulty badhane par required hashing work exponential double
+  (2^D) ho jata hai. Pure Python vs Hashlib throughput comparison dikhata hai.
+
+
+--------------------------------------------------------------------------------
+[0] Exit Console
+--------------------------------------------------------------------------------
+* Terminal session ko safely aur cleanly close karta hai.
+
+
+================================================================================
+3. VIVA & INTERVIEW GOLDEN QUESTIONS & ANSWERS
+================================================================================
+
+Q1: Balance kaise store hota hai is blockchain me?
+Ans: Hum Bitcoin ki tarah UTXO (Unspent Transaction Output) model use karte hain.
+     Ledger ke paas ek hash-map hota hai jo (tx_id, output_index) -> UTXOEntry
+     track karta hai. Balance ek address ke saare unspent outputs ka sum hota hai.
+
+Q2: Double-spending kaise roki jaati hai?
+Ans: Do levels par:
+     1. Mempool level: `_mempool_spent` set check karta hai ki pending txs me
+        koi UTXO dubara toh nahi aaya.
+     2. Block commit level: Block apply hone se pehle staged UTXO copy par atomic
+        verification hoti hai. Consume hote hi UTXO map se delete ho jata hai.
+
+Q3: Merkle Tree ka main purpose kya hai?
+Ans: Merkle Tree transaction data ko 32-byte root hash me summarize karta hai.
+     Isse SPV (Simple Payment Verification) light-clients bina pura block download
+     kiye O(log N) authentication path se transaction verify kar sakte hain.
+
+Q4: 1-byte tamper karne par poori chain kyu invalidate hoti hai?
+Ans: Cryptographic hash chaining ki wajah se:
+     Tamper -> TxID change -> Merkle Root mismatch -> Header Hash change ->
+     Agla block ka 'previous_hash' link break -> PoW proof invalid.
+
+================================================================================
+File saved on Desktop for reference during demo, viva, and code review.
+================================================================================
