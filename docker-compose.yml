@@ -1,0 +1,25 @@
+# Blockchain-Lite (Terminal Only Edition)
+#   docker compose run --rm terminal                  # interactive terminal console
+#   docker compose --profile demo run --rm cli-demo   # 6-stage CLI demonstration
+#   docker compose --profile test run --rm test-suite # full automated test-suite
+
+services:
+  terminal:
+    build: .
+    image: blockchain-lite:local
+    container_name: blockchain-lite-terminal
+    stdin_open: true
+    tty: true
+    command: ["run_terminal.py", "--fast-hash"]
+
+  cli-demo:
+    image: blockchain-lite:local
+    build: .
+    profiles: ["demo"]
+    command: ["run_terminal.py", "--demo"]
+
+  test-suite:
+    image: blockchain-lite:local
+    build: .
+    profiles: ["test"]
+    command: ["run_tests.py"]
