@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blockchain-Lite Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#explorer">
+    <span class="brand-mark" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4FB8B4" stroke-width="2"><rect x="2" y="8" width="8" height="8" rx="2"/><rect x="14" y="8" width="8" height="8" rx="2"/><path d="M10 12h4"/></svg>
+    </span>
+    <span class="brand-name">Blockchain-Lite</span>
+  </a>
+  <nav class="pill-track" aria-label="Main">
+    <a href="#explorer" data-view="explorer">Explorer</a>
+    <a href="#forge" data-view="forge">Block Forge</a>
+    <a href="#tamper" data-view="tamper">Tamper Lab</a>
+    <a href="#people" data-view="people">People</a>
+  </nav>
+  <div class="grow"></div>
+  <div class="live" id="live" role="status">
+    <span class="live-dot" aria-hidden="true"></span>
+    <span id="live-text">Connecting…</span>
+  </div>
+</header>
+
+<!-- ================================================================ EXPLORER -->
+<main class="page" id="view-explorer" data-view-panel="explorer">
+
+  <div class="row">
+    <section class="card next-card" aria-label="Next block" id="next-card">
+      <div class="ring-wrap">
+        <svg width="260" height="260" viewBox="0 0 260 260" aria-hidden="true">
+          <circle class="ring-bg" cx="130" cy="130" r="112"/>
+          <circle class="ring-fg" id="next-ring" cx="130" cy="130" r="112" stroke-dasharray="0 704" transform="rotate(-90 130 130)"/>
+          <circle class="ring-knob" id="next-knob" cx="130" cy="18" r="15"/>
+        </svg>
+        <div class="ring-core">
+          <span class="eyebrow">next block</span>
+          <span class="big" id="next-num">#–</span>
+          <span class="mono" style="font-size:12px;color:var(--teal-900)" id="next-label">–</span>
+        </div>
+      </div>
+      <p class="muted" style="margin:0;font-size:14px;max-width:280px" id="next-note">The ring fills as transactions wait in the mempool.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-primary" type="button" id="mine-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 15 10 8"/><path d="M8 3l7 7-3 3-7-7z"/></svg>
+          Mine &amp; watch
+        </button>
+        <button class="btn btn-soft" type="button" id="auto-btn" aria-pressed="false">Auto-mine</button>
+      </div>
+    </section>
+
+    <section class="stats" aria-label="Chain status">
+      <div class="card card-sm">
+        <div class="eyebrow">Chain height</div>
+        <div class="stat-value"><span id="stat-height">–</span> <small>blocks</small></div>
+      </div>
+      <div class="card card-sm">
+        <div class="eyebrow">Total supply</div>
+        <div class="stat-value"><span id="stat-supply">–</span> <small>coins</small></div>
+      </div>
+      <div class="card card-sm span-2">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <span class="eyebrow" id="tip-label">Tip hash</span>
+          <span class="chip" id="valid-chip">Checking…</span>
+        </div>
+        <div class="well tip-hash" id="tip-hash">–</div>
+      </div>
+      <div class="card card-sm span-2" aria-labelledby="diff-h">
+        <div class="card-head" style="margin-bottom:10px">
+          <h3 id="diff-h">Difficulty</h3>
+          <span class="chip" id="retarget-chip">–</span>
+        </div>
+        <div class="diff-row">
+          <div class="stat-value"><span id="diff-now">–</span> <small>bits</small></div>
+          <div class="diff-arrow" id="diff-next" aria-live="polite"></div>
+          <p class="muted" style="margin:0;font-size:14px;flex:1 1 220px" id="diff-rule"></p>
+        </div>
+        <div class="pace" aria-hidden="true">
+          <div class="pace-zone pace-fast" id="pace-fast"><span>too fast → +1</span></div>
+          <div class="pace-zone pace-ok" id="pace-ok"><span>on target</span></div>
+          <div class="pace-zone pace-slow" id="pace-slow"><span>too slow → −1</span></div>
+          <div class="pace-marker" id="pace-marker"></div>
+        </div>
+        <div class="pace-scale" id="pace-scale"></div>
+      </div>
+      <div class="card card-sm span-2">
+        <div class="card-head" style="margin-bottom:12px">
+          <h3>Mining effort</h3>
+          <span class="muted" style="font-size:13px">hashes tried per block (log scale) · expected ≈ 2<sup>D</sup></span>
+        </div>
+        <div class="effort" id="effort"></div>
+      </div>
+    </section>
+
+    <aside class="dock" aria-label="Node gauges">
+      <div class="gauge" id="gauge-valid"></div>
+      <div class="gauge" id="gauge-mempool"></div>
+      <div class="gauge" id="gauge-diff"></div>
+      <button class="dock-btn" type="button" id="refresh-btn" aria-label="Reload chain state">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0C1A1D" stroke-width="2" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>
+      </button>
+    </aside>
+  </div>
+
+  <section class="card" aria-labelledby="chain-h">
+    <div class="card-head">
+      <h2 id="chain-h">The chain</h2>
+      <p class="muted" style="margin:0;font-size:14px">Each block holds the hash of the one before it · <span class="mono" style="color:var(--teal-900)">previous_hash</span></p>
+    </div>
+    <div class="chain-scroll" id="chain-scroll">
+      <div class="chain" id="chain"></div>
+    </div>
+  </section>
+
+  <div class="row" style="align-items:flex-start">
+    <div class="side">
+      <section class="card" aria-labelledby="send-h">
+        <h2 id="send-h">Send coins</h2>
+        <p class="muted" style="margin:4px 0 0;font-size:14px">Signed with the sender’s RSA key, then submitted through <span class="mono">submit_transaction</span>.</p>
+        <div class="eyebrow" style="margin-top:18px">From</div>
+        <div class="people" id="people" role="group" aria-label="Sender"></div>
+        <form class="form-grid" id="send-form">
+          <label class="field">To <select id="to-select"></select></label>
+          <label class="field">Amount <input id="amount" type="number" min="1" value="8" required></label>
+          <label class="field">Fee <input id="fee" type="number" min="0" value="1" required></label>
+          <label class="field">Sender balance <input id="from-balance" type="text" readonly></label>
+          <div class="form-note" id="send-note" role="status">Pick a sender, a recipient and an amount.</div>
+          <button class="btn btn-primary" type="submit" id="send-btn">Sign &amp; send</button>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="mempool-h">
+        <div class="card-head">
+          <h2 id="mempool-h">Mempool</h2>
+          <span class="muted" style="font-size:13px" id="mempool-count">0 waiting</span>
+        </div>
+        <div class="list" id="mempool"></div>
+      </section>
+    </div>
+
+    <section class="card main-col" aria-labelledby="inspect-h">
+      <div class="card-head" style="margin-bottom:2px">
+        <h2 id="inspect-h">Block</h2>
+        <a href="#forge" id="replay-link" style="font-size:14px;font-weight:700">Watch how it was built →</a>
+      </div>
+      <p class="muted" style="margin:0 0 16px;font-size:14px">The 88-byte header is the only part hashed for Proof-of-Work.</p>
+      <div class="header-bar" aria-hidden="true">
+        <div style="background:var(--sage)"></div><div style="background:var(--teal-200)"></div><div style="background:var(--teal-400)"></div><div style="background:var(--sage)"></div><div style="background:var(--sand)"></div><div style="background:var(--teal-900)"></div>
+      </div>
+      <div class="header-bar header-labels"><span>idx</span><span>previous_hash · 32 B</span><span>merkle_root · 32 B</span><span>time</span><span>D</span><span>nonce</span></div>
+      <dl class="kv" id="inspect-kv"></dl>
+      <div class="well" style="border-radius:24px;padding:20px">
+        <div class="card-head" style="margin-bottom:14px">
+          <h3 id="tree-title">Merkle tree</h3>
+          <span class="muted" style="font-size:13px" id="proof-label">Pick a transaction to see its proof path</span>
+        </div>
+        <div class="tree-scroll"><div class="tree" id="tree"></div></div>
+        <p class="muted" style="margin:14px 0 0;font-size:13px">Leaf <span class="mono">H(0x00‖tx_id)</span> · parent <span class="mono">H(0x01‖L‖R)</span> · an odd last node pairs with itself.</p>
+      </div>
+      <h3 style="margin:22px 0 10px">Transactions</h3>
+      <div class="list" id="tx-list"></div>
+    </section>
+  </div>
+
+  <section class="capsule" aria-labelledby="log-h">
+    <div class="card-head" style="margin-bottom:14px">
+      <h2 id="log-h">Live events</h2>
+      <span class="mono" style="font-size:12px;color:var(--teal-200)">GET /events · text/event-stream</span>
+    </div>
+    <div class="events" id="events" aria-live="polite"></div>
+  </section>
+</main>
+
+<!-- ================================================================ FORGE -->
+<main class="page hidden" id="view-forge" data-view-panel="forge">
+  <div class="forge-head">
+    <div>
+      <a href="#explorer" style="font-size:14px;font-weight:700;text-decoration:none">← Explorer</a>
+      <h1 id="forge-title">Block Forge</h1>
+      <p class="muted" style="margin:0">Replays how a block is built, from the real data of that block.</p>
+    </div>
+    <div class="lab-controls">
+      <label class="field">Replay block <select id="forge-select"></select></label>
+      <button class="btn btn-primary" type="button" id="forge-mine">Mine a new block</button>
+    </div>
+  </div>
+
+  <nav class="pill-track" aria-label="Stages" id="stage-tabs"></nav>
+
+  <div class="forge-body">
+    <section class="stage" aria-label="Animation stage" aria-live="polite">
+      <div class="stage-step" data-step="0">
+        <div class="eyebrow">Mempool → candidate block</div>
+        <div class="collect">
+          <div class="collect-list" id="collect-list"></div>
+          <div class="candidate">
+            <div class="serif" style="font-size:32px;line-height:1.1" id="candidate-title">Candidate block</div>
+            <div class="slots" id="slots"></div>
+            <div class="muted" style="font-size:13px" id="candidate-note"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-step" data-step="1">
+        <div class="eyebrow">One transaction through SHA-256</div>
+        <div class="hash-flow">
+          <div class="hash-box"><div class="muted" style="font-family:var(--sans);font-size:13px;font-weight:600">Canonical tx bytes</div><span id="hash-in"></span></div>
+          <div class="sha-orb"><span class="mono" style="font-size:20px">SHA-256</span><span class="rounds" id="sha-rounds">0</span><span style="font-size:12px;color:var(--teal-200)">of 64 rounds</span></div>
+          <div class="hash-box is-out"><div style="font-family:var(--sans);font-size:13px;font-weight:600">tx_id · 32 bytes</div><span id="hash-out"></span></div>
+        </div>
+        <div class="hash-flow">
+          <span class="tx-pill" style="animation:none"><span class="mono"><b style="color:var(--teal-900)">0x00</b> ‖ tx_id</span></span>
+          <span class="mono" style="color:var(--teal-900)">→</span>
+          <span class="tx-pill" style="animation:none;background:var(--teal-400);color:var(--night)"><span class="mono" id="hash-leaf"></span></span>
+        </div>
+        <div class="card" style="padding:22px">
+          <h3 id="aval-title">Avalanche</h3>
+          <div class="bits" id="bits" style="margin-top:12px"></div>
+          <p class="muted" style="margin:12px 0 0;font-size:13px">Flip the last bit of the transaction bytes and hash again. Dark dots are output bits that changed.</p>
+        </div>
+      </div>
+
+      <div class="stage-step merkle-stage" data-step="2"><div id="merkle-rows" style="display:flex;flex-direction:column;gap:26px"></div></div>
+
+      <div class="stage-step" data-step="3">
+        <div class="eyebrow">88-byte header · only the nonce changes between tries</div>
+        <div class="header-fields" id="header-fields"></div>
+        <div class="pow">
+          <div class="tries" id="tries"></div>
+          <div class="pow-orb">
+            <div class="ring-wrap">
+              <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+                <circle cx="75" cy="75" r="64" fill="none" stroke="#23363A" stroke-width="10"/>
+                <circle id="pow-ring" cx="75" cy="75" r="64" fill="none" stroke="#4FB8B4" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 403" transform="rotate(-90 75 75)" style="transition:stroke-dasharray .2s"/>
+              </svg>
+              <div class="center"><b id="pow-count">0</b><span style="font-size:12px;color:var(--teal-200)">hashes tried</span></div>
+            </div>
+            <div style="text-align:center;font-size:13px;color:var(--teal-200)" id="pow-target"></div>
+            <button class="btn btn-light" type="button" id="pow-replay" style="width:100%">Replay search</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-step" data-step="4">
+        <div class="append-chain" id="append-chain" style="flex-grow:1"></div>
+        <div class="facts" id="facts"></div>
+      </div>
+    </section>
+
+    <aside class="forge-aside">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+          <div class="step-ring">
+            <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="23" fill="none" stroke="#E6DED0" stroke-width="6"/><circle id="step-ring" cx="28" cy="28" r="23" fill="none" stroke="#4FB8B4" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 145" transform="rotate(-90 28 28)" style="transition:stroke-dasharray .5s"/></svg>
+            <span id="step-no">1/5</span>
+          </div>
+          <h2 id="step-title" style="font-size:30px"></h2>
+        </div>
+        <p id="step-body" style="margin:0;color:var(--ink-2)"></p>
+        <div class="well code" id="step-code" style="margin-top:16px;color:var(--teal-900)"></div>
+      </div>
+      <div class="capsule" style="flex-grow:1">
+        <div class="eyebrow" style="color:var(--teal-200)">Manim scene for this step</div>
+        <div class="code" id="step-manim" style="margin-top:10px"></div>
+        <video id="render-video" class="hidden" controls muted playsinline style="width:100%;margin-top:16px;border-radius:18px"></video>
+        <p id="render-note" style="margin:14px 0 0;font-size:13px;color:var(--teal-200)">Start the bridge with <span class="mono">--render</span> to get an MP4 of every new block.</p>
+      </div>
+    </aside>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-soft" type="button" id="step-prev">← Back</button>
+    <button class="btn btn-soft" type="button" id="step-play" aria-pressed="false">Play</button>
+    <div class="progress" aria-hidden="true"><div id="step-progress"></div></div>
+    <button class="btn btn-primary" type="button" id="step-next">Next step →</button>
+  </div>
+</main>
+
+<!-- ================================================================ TAMPER -->
+<main class="page hidden" id="view-tamper" data-view-panel="tamper">
+  <div class="lab-head">
+    <div>
+      <a href="#explorer" style="font-size:14px;font-weight:700;text-decoration:none">← Explorer</a>
+      <h1>Tamper Lab</h1>
+      <p class="muted" style="margin:0;max-width:780px">Every person keeps their own copy of the ledger. Change a block in one person’s copy, then watch the network check catch it and restore the copy from the version most people hold.</p>
+    </div>
+    <div class="audit-box" aria-live="polite">
+      <div class="step-ring" style="width:64px;height:64px">
+        <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="#23363A" stroke-width="6"/><circle id="audit-ring" cx="32" cy="32" r="26" fill="none" stroke="#4FB8B4" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 164" transform="rotate(-90 32 32)" style="transition:stroke-dasharray 1s linear"/></svg>
+        <span id="audit-count" style="color:var(--teal-50)">–</span>
+      </div>
+      <div>
+        <div class="eyebrow" style="color:var(--teal-200)">Network check</div>
+        <div id="audit-text" style="font-size:14px">–</div>
+      </div>
+      <button class="btn btn-light" type="button" id="audit-now">Check now</button>
+    </div>
+  </div>
+
+  <form class="card tamper-form" id="tamper-form" aria-labelledby="tamper-form-h">
+    <h3 id="tamper-form-h" style="flex:1 1 100%">Tamper with someone’s copy</h3>
+    <label class="field">Whose copy <select id="tamper-person"></select></label>
+    <label class="field">Block <select id="tamper-block"></select></label>
+    <label class="field" style="flex:2 1 220px">Transaction <select id="tamper-tx"></select></label>
+    <label class="field">New amount <input id="tamper-amount" type="number" min="1" value="1000" required></label>
+    <button class="btn btn-danger" type="submit" id="tamper-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18v.5"/></svg>
+      Tamper
+    </button>
+  </form>
+
+  <section class="card" aria-labelledby="copies-h">
+    <div class="card-head">
+      <h2 id="copies-h">Everyone’s ledger copy</h2>
+      <span class="muted" style="font-size:13px" id="copies-summary"></span>
+    </div>
+    <div class="copies" id="copies"></div>
+  </section>
+
+  <section id="lab-result" class="hidden" style="display:flex;flex-direction:column;gap:28px" aria-live="polite">
+    <div class="lab-chain" id="lab-chain"></div>
+    <div class="row">
+      <section class="card" style="flex:1 1 380px" aria-labelledby="lab-tx-h">
+        <h3 id="lab-tx-h">What the tamper broke</h3>
+        <dl class="kv" id="lab-kv" style="margin-top:14px"></dl>
+        <p class="muted" style="margin:0;font-size:14px">To make the edit stick, an attacker would have to redo the Proof-of-Work for this block and every block after it, and then convince most people to switch to their copy.</p>
+      </section>
+      <section class="capsule" style="flex:1 1 380px" aria-labelledby="lab-log-h">
+        <div class="eyebrow" id="lab-log-h" style="color:var(--teal-200);margin-bottom:10px">Network check log</div>
+        <div class="log" id="lab-log"></div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<!-- ================================================================ PEOPLE -->
+<main class="page hidden" id="view-people" data-view-panel="people">
+  <div class="lab-head">
+    <div>
+      <a href="#explorer" style="font-size:14px;font-weight:700;text-decoration:none">← Explorer</a>
+      <h1>People</h1>
+      <p class="muted" style="margin:0;max-width:780px">Add new people to the network, make transactions by hand, and add the block yourself.</p>
+    </div>
+  </div>
+
+  <div class="row" style="align-items:flex-start">
+    <div class="side">
+      <section class="card" aria-labelledby="add-h">
+        <h2 id="add-h">Add a person</h2>
+        <p class="muted" style="margin:4px 0 16px;font-size:14px">They get their own RSA keys and address, download a copy of the ledger, and take part in every network check.</p>
+        <form class="form-grid" id="person-form">
+          <label class="field" style="grid-column:1/-1">Name <input id="person-name" type="text" maxlength="20" autocomplete="off" placeholder="e.g. Ravi" required></label>
+          <label class="field">Starting coins from Miner <input id="person-fund" type="number" min="0" value="20"></label>
+          <div class="field" style="justify-content:flex-end"><span class="muted" style="font-weight:500">Sent as a normal signed transaction, so it lands in the next block.</span></div>
+          <div class="form-note" id="person-note" role="status">Names: up to 20 letters, digits, spaces, - or _.</div>
+          <button class="btn btn-primary" type="submit" id="person-btn">Add person</button>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="manual-h">
+        <h2 id="manual-h">Manual transaction</h2>
+        <p class="muted" style="margin:4px 0 16px;font-size:14px">Build a transfer yourself. It waits in Pending until you add a block.</p>
+        <form class="form-grid" id="manual-form">
+          <label class="field">From <select id="manual-from"></select></label>
+          <label class="field">To <select id="manual-to"></select></label>
+          <label class="field">Amount <input id="manual-amount" type="number" min="1" value="5" required></label>
+          <label class="field">Fee <input id="manual-fee" type="number" min="0" value="1" required></label>
+          <div class="form-note" id="manual-note" role="status">From balance: –</div>
+          <button class="btn btn-primary" type="submit" id="manual-btn">Add to pending</button>
+        </form>
+      </section>
+    </div>
+
+    <div class="main-col" style="display:flex;flex-direction:column;gap:28px">
+      <section class="card" aria-labelledby="pending-h">
+        <div class="card-head">
+          <h2 id="pending-h">Pending</h2>
+          <span class="muted" style="font-size:13px" id="pending-count">0 waiting</span>
+        </div>
+        <div class="list" id="pending-list"></div>
+        <div class="add-block">
+          <button class="btn btn-primary btn-big" type="button" id="add-block-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="8" height="10" rx="2"/><rect x="13" y="7" width="8" height="10" rx="2"/><path d="M17 3v4M15 5h4"/></svg>
+            Add block to blockchain
+          </button>
+          <p class="muted" style="margin:0;font-size:13px" id="add-block-note">Mines every pending transaction into the next block (Proof-of-Work at the current difficulty).</p>
+        </div>
+        <div class="form-note hidden" id="auto-warning" style="margin-top:14px">Auto-mine is on, so blocks are also being added automatically. <button class="btn btn-soft" type="button" id="auto-off" style="min-height:36px;padding:0 14px;margin-left:6px">Turn it off</button></div>
+      </section>
+
+      <section class="card" aria-labelledby="everyone-h">
+        <div class="card-head">
+          <h2 id="everyone-h">Everyone</h2>
+          <span class="muted" style="font-size:13px" id="everyone-count"></span>
+        </div>
+        <div class="people-grid" id="people-grid"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<div class="toasts" id="toasts" aria-live="assertive"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
