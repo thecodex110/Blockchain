@@ -149,16 +149,7 @@
     chip.className = chain.is_valid ? 'chip' : 'chip chip-danger';
     chip.textContent = chain.is_valid ? '✓ Valid Genesis → tip' : '✗ Chain invalid';
 
-    // Next-block ring: fills as the mempool fills (4 tx = full).
-    const fill = Math.min(1, (mempool.length + 1) / 5);
-    const C = 2 * Math.PI * 112;
-    const ang = (-90 + 360 * fill) * Math.PI / 180;
-    $('next-ring').setAttribute('stroke-dasharray', `${(C * fill).toFixed(1)} ${C.toFixed(1)}`);
-    $('next-knob').setAttribute('cx', (130 + 112 * Math.cos(ang)).toFixed(1));
-    $('next-knob').setAttribute('cy', (130 + 112 * Math.sin(ang)).toFixed(1));
-    $('next-num').textContent = `#${chain.height}`;
-    $('next-label').textContent = `${mempool.length} tx waiting`;
-    $('next-note').textContent = `${mempool.length} pending transfer${mempool.length === 1 ? '' : 's'} + coinbase of ${chain.block_reward} + fees.`;
+    renderNextBlock();
 
     gauge($('gauge-valid'), chain.is_valid ? 1 : 0.05, chain.is_valid ? '#4FB8B4' : '#F0A592', chain.is_valid ? '100%' : 'broken', 'valid', chain.is_valid ? '✓' : '✗');
     gauge($('gauge-mempool'), mempool.length / 10, '#98D8D0', `${mempool.length}/10`, 'mempool', 'tx');
@@ -173,6 +164,38 @@
     renderSelectors();
     renderNetwork();
     renderPeoplePage();
+  }
+
+  /** The next block as a square of 16 slots: coinbase first, then one per pending transfer. */
+  const BLOCK_SLOTS = 16;
+  function renderNextBlock() {
+    if (!S.state) return;
+    const { chain, mempool, consensus } = S.state;
+    const pending = mempool.length;
+    $('next-num').textContent = `#${chain.height}`;
+    const shown = Math.min(pending, BLOCK_SLOTS - 1);
+    const overflow = pending - shown;
+    $('block-box').replaceChildren(...Array.from({ length: BLOCK_SLOTS }, (_, i) => {
+      if (i === 0) return el('span', { class: 'slot-cell is-coinbase', text: 'CB' });
+      if (i <= shown) {
+        const last = i === shown && overflow > 0;
+        return el('span', { class: 'slot-cell is-tx', style: { animationDelay: `${i * 40}ms` }, text: last ? `+${overflow + 1}` : '' });
+      }
+      return el('span', { class: 'slot-cell' });
+    }));
+    const status = $('next-status');
+    if (S.mining) {
+      status.textContent = 'Mining…';
+    } else if (consensus.auto_mining) {
+      status.textContent = 'Auto-mining';
+    } else {
+      status.textContent = pending ? 'Ready to mine' : 'Waiting for transfers';
+    }
+    $('next-tx').textContent = `1 coinbase + ${pending}`;
+    $('next-reward').textContent = `${chain.block_reward} + fees`;
+    const d = consensus.next_difficulty;
+    $('next-diff').textContent = d === consensus.difficulty ? `${d} bits` : `${consensus.difficulty} → ${d} bits`;
+    $('next-work').textContent = `~${compact(2 ** d)} hashes`;
   }
 
   function renderDifficulty(c) {
@@ -578,7 +601,7 @@
       el('span', { class: 'mono', style: { fontSize: '13px', color: tx.type === 'coinbase' ? 'var(--teal-200)' : 'var(--teal-900)' }, text: tx.tx_id.slice(0, 8) }),
       el('span', { style: { flexGrow: 1, fontSize: '14px' }, text: tx.type === 'coinbase' ? `coinbase → ${tx.outputs[0].to}` : `${tx.from} → ${tx.outputs[0].to}` }),
       el('span', { class: 'mono', style: { fontWeight: 500 }, text: tx.outputs[0].amount }))),
-    txs.length > 7 ? el('div', { class: 'muted', style: { paddingLeft: '18px', fontSize: '13px' }, text: `+ ${txs.length - 7} more` }) : null);
+    ...(txs.length > 7 ? [el('div', { class: 'muted', style: { paddingLeft: '18px', fontSize: '13px' }, text: `+ ${txs.length - 7} more` })] : []));
     $('candidate-title').textContent = `Candidate block #${t.block.index}`;
     $('slots').replaceChildren(...txs.map((tx, i) => el('div', { class: 'slot', style: { animationDelay: `${300 + i * 120}ms` }, text: tx.tx_id.slice(0, 8) })));
     const cb = txs[0];
@@ -657,7 +680,7 @@
       if (token !== S.playToken || S.step !== 3) return;
       const a = t.attempts[i];
       nonceField.textContent = `n=${a.nonce}`;
-      $('pow-count').textContent = fmt(skipped + i + 1);
+      $('pow-count').textContent = compact(skipped + i + 1);
       $('pow-ring').setAttribute('stroke-dasharray', `${(C * (skipped + i + 1) / total).toFixed(1)} ${C.toFixed(1)}`);
       list.append(el('div', { class: `try${a.ok ? ' ok' : ''}` },
         el('span', { text: `n=${a.nonce}` }), el('span', { text: `${a.hash.slice(0, 16)}…` }), el('span', { text: a.ok ? 'FOUND' : '×' })));
@@ -718,6 +741,7 @@
     const btns = [$('mine-btn'), $('forge-mine')];
     btns.forEach((b) => { b.disabled = true; });
     $('next-card').classList.add('is-mining');
+    renderNextBlock();
     $('forge-title').textContent = 'Mining…';
     try {
       const trace = await api.post('/api/mine');
@@ -732,6 +756,7 @@
       S.mining = false;
       btns.forEach((b) => { b.disabled = false; });
       $('next-card').classList.remove('is-mining');
+      renderNextBlock();
     }
   }
 
