@@ -74,7 +74,7 @@
 
   const linkSvg = (bad) => {
     const s = svg('svg', { width: 56, height: 20, viewBox: '0 0 56 20', class: 'link', 'aria-hidden': 'true' });
-    s.append(svg('path', { d: 'M6 10 L50 10', stroke: bad ? '#B4523C' : '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-dasharray': bad ? '3 7' : 'none' }));
+    s.append(svg('path', { d: 'M6 10 L50 10', class: bad ? '' : 'flow', stroke: bad ? '#B4523C' : '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-dasharray': bad ? '3 7' : 'none' }));
     s.append(svg('circle', { cx: 6, cy: 10, r: 5, fill: bad ? '#E2B3A5' : '#98D8D0' }));
     s.append(svg('circle', { cx: 50, cy: 10, r: 5, fill: bad ? '#E2B3A5' : '#10606F' }));
     return s;
@@ -99,8 +99,36 @@
   // ------------------------------------------------------------------ routing
 
   const VIEWS = ['explorer', 'forge', 'tamper', 'people'];
+  const UNLOCK_KEY = 'blt-unlocked';
+  const isUnlocked = () => {
+    try { return sessionStorage.getItem(UNLOCK_KEY) === '1'; } catch (_) { return false; }
+  };
+  const isLandingRoute = () => !isUnlocked() || location.hash === '' || location.hash === '#' || location.hash === '#welcome';
+
   function route() {
+    const landing = isLandingRoute();
+    document.documentElement.classList.toggle('is-landing', landing);
+    if (landing) {
+      renderLanding();
+      renderVault();
+      const wanted = location.hash.slice(1);
+      if (!isUnlocked() && VIEWS.includes(wanted)) {
+        // Someone opened an app page directly: point them at the vault.
+        vaultStatus(`Enter the passcode to open ${wanted === 'forge' ? 'Block Forge' : wanted === 'tamper' ? 'Tamper Lab' : wanted[0].toUpperCase() + wanted.slice(1)}.`);
+        $('vault').scrollIntoView({ block: 'center' });
+        $('passcode').focus({ preventScroll: true });
+      } else {
+        window.scrollTo({ top: 0 });
+      }
+      return;
+    }
     const view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'explorer';
+    if (view !== S.view && !reducedMotion) {
+      const page = document.querySelector(`[data-view-panel="${view}"]`);
+      page.classList.add('is-revealing');
+      setTimeout(() => page.classList.remove('is-revealing'), 1100);
+    }
+    S.view = view;
     document.querySelectorAll('[data-view-panel]').forEach((p) => p.classList.toggle('hidden', p.dataset.viewPanel !== view));
     document.querySelectorAll('[data-view]').forEach((a) => {
       if (a.dataset.view === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
@@ -138,8 +166,8 @@
     const { chain, blocks, mempool, wallets } = S.state;
     const tip = blocks[blocks.length - 1];
 
-    $('stat-height').textContent = fmt(chain.height);
-    $('stat-supply').textContent = fmt(chain.total_supply);
+    countTo($('stat-height'), chain.height);
+    countTo($('stat-supply'), chain.total_supply);
     $('tip-label').textContent = `Tip hash · block #${tip.index}`;
     const zeros = Math.floor(tip.difficulty / 4); // hex digits that must be 0 at the tip's difficulty
     $('tip-hash').replaceChildren(
@@ -150,11 +178,19 @@
     chip.textContent = chain.is_valid ? '✓ Valid Genesis → tip' : '✗ Chain invalid';
 
     renderNextBlock();
+    renderWallets();
+    renderRails();
 
     gauge($('gauge-valid'), chain.is_valid ? 1 : 0.05, chain.is_valid ? '#4FB8B4' : '#F0A592', chain.is_valid ? '100%' : 'broken', 'valid', chain.is_valid ? '✓' : '✗');
     gauge($('gauge-mempool'), mempool.length / 10, '#98D8D0', `${mempool.length}/10`, 'mempool', 'tx');
     const cons = S.state.consensus;
     gauge($('gauge-diff'), cons.difficulty / cons.max_difficulty, '#E8DDCF', `${cons.difficulty} bits`, 'difficulty', 'D');
+    const peers = (S.state.network && S.state.network.peers) || [];
+    const synced = peers.filter((p) => p.status === 'ok').length;
+    gauge($('gauge-copies'), peers.length ? synced / peers.length : 0, synced === peers.length ? '#4FB8B4' : '#F0A592', `${synced}/${peers.length}`, 'copies', 'net');
+    const avg = cons.window_avg_block_time;
+    const target = cons.target_block_time || 10;
+    gauge($('gauge-time'), avg === null || avg === undefined ? 0 : Math.min(1, avg / (2 * target)), '#98D8D0', avg === null || avg === undefined ? '–' : secs(avg), 'avg block', 's');
 
     renderDifficulty(cons);
     renderEffort();
@@ -164,6 +200,7 @@
     renderSelectors();
     renderNetwork();
     renderPeoplePage();
+    renderLanding();
   }
 
   /** The next block as a square of 16 slots: coinbase first, then one per pending transfer. */
@@ -183,6 +220,7 @@
       }
       return el('span', { class: 'slot-cell' });
     }));
+    $('ambient').classList.toggle('is-mining', S.mining || consensus.auto_mining);
     const status = $('next-status');
     if (S.mining) {
       status.textContent = 'Mining…';
@@ -196,6 +234,142 @@
     const d = consensus.next_difficulty;
     $('next-diff').textContent = d === consensus.difficulty ? `${d} bits` : `${consensus.difficulty} → ${d} bits`;
     $('next-work').textContent = `~${compact(2 ** d)} hashes`;
+
+    const tip = S.state.blocks[S.state.blocks.length - 1];
+    $('last-num').textContent = tip.index === 0 ? 'Genesis' : `#${tip.index}`;
+    $('last-ago').textContent = ago(tip.timestamp);
+    $('last-tries').textContent = compact(tip.nonce + 1);
+    $('last-tx').textContent = tip.tx_count;
+    $('last-time').textContent = tip.block_time === null ? '–' : secs(tip.block_time);
+  }
+
+  /** Animate a number from what the element shows now to `value`. */
+  function countTo(node, value) {
+    const from = Number((node.textContent || '').replace(/[^0-9]/g, ''));
+    if (reducedMotion || !Number.isFinite(from) || node.textContent === '–' || from === value) {
+      node.textContent = fmt(value);
+      return;
+    }
+    const start = performance.now();
+    const dur = 700;
+    node.classList.add('is-counting');
+    const step = (t) => {
+      const k = Math.min(1, (t - start) / dur);
+      const eased = 1 - (1 - k) ** 3;
+      node.textContent = fmt(Math.round(from + (value - from) * eased));
+      if (k < 1) requestAnimationFrame(step);
+      else node.classList.remove('is-counting');
+    };
+    requestAnimationFrame(step);
+  }
+
+  // ------------------------------------------------------------------ ambient rails (side margins)
+
+  let railKey = '';
+  let railTip = -1;
+
+  function ghostCubeSvg() {
+    const s = svg('svg', { viewBox: '0 0 120 132', 'aria-hidden': 'true' });
+    const face = (points) => svg('polygon', { points, fill: 'rgba(226,244,240,0.55)', stroke: '#10606F', 'stroke-width': 1.6, 'stroke-dasharray': '6 5', 'stroke-linejoin': 'round' });
+    s.append(face('60,6 112,34 60,62 8,34'), face('8,34 60,62 60,126 8,98'), face('112,34 60,62 60,126 112,98'));
+    return s;
+  }
+
+  function renderRails() {
+    if (!S.state) return;
+    const { blocks, mempool, chain, consensus } = S.state;
+    $('ambient').classList.toggle('is-mining', S.mining || consensus.auto_mining);
+    const tip = blocks[blocks.length - 1];
+    const railH = document.querySelector('.ambient-rail.is-left').clientHeight;
+    const poolH = $('rail-pool').clientHeight;
+    if (!railH) return; // rails hidden on narrow windows
+    const key = `${tip.index}:${mempool.length}:${railH}:${poolH}`;
+    if (key === railKey) return;
+    railKey = key;
+
+    // Left rail: as many of the newest blocks as fit, newest on top, linked downwards to their parents.
+    const fit = Math.max(3, Math.min(8, Math.floor((railH - 50) / 152)));
+    const items = [];
+    blocks.slice(-fit).reverse().forEach((b, i) => {
+      if (i > 0) {
+        const link = svg('svg', { class: 'rail-link', width: 20, height: 34, viewBox: '0 0 20 34', 'aria-hidden': 'true' });
+        link.append(
+          svg('path', { d: 'M10 4v26', stroke: '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+          svg('circle', { cx: 10, cy: 4, r: 4, fill: '#10606F' }),
+          svg('circle', { cx: 10, cy: 30, r: 4, fill: '#98D8D0' }));
+        items.push(link);
+      }
+      const zeros = b.hash.match(/^0*/)[0];
+      const cube = el('div', { class: `rail-cube${i === 0 && railTip >= 0 && b.index > railTip ? ' is-dropping' : ''}`, style: { animationDelay: `${i * 0.6}s` } },
+        cubeSvg(),
+        el('span', { class: 'num', text: b.index === 0 ? 'Genesis' : `#${b.index}` }),
+        el('span', { class: 'hash' }, el('b', { text: zeros }), b.hash.slice(zeros.length, zeros.length + 4)));
+      items.push(cube);
+    });
+    $('rail-chain').replaceChildren(...items);
+    railTip = tip.index;
+
+    // Right rail: the next block as a dashed ghost; pending transfers rise into it.
+    $('rail-next').replaceChildren(
+      ghostCubeSvg(),
+      el('span', { class: 'num', text: `#${chain.height}` }),
+      el('span', { class: 'sub', text: mempool.length ? `${mempool.length} transfer${mempool.length === 1 ? '' : 's'} waiting` : `${consensus.next_difficulty} bits to find` }));
+    // Enough chips to keep the whole stream busy: pending transfers first, then recent hash fragments.
+    const count = Math.max(6, Math.min(16, Math.floor(poolH / 60)));
+    const txChips = mempool.slice(0, count).map((tx) => ({ text: tx.tx_id.slice(0, 8), tx: true }));
+    const hashChips = blocks.slice().reverse().map((b) => ({ text: b.hash.slice(-8), tx: false }));
+    const chips = txChips.concat(hashChips).slice(0, count);
+    const duration = Math.max(8, poolH / 45); // ~45 px per second, the same speed whatever the height
+    $('rail-pool').replaceChildren(...chips.map((c, i) => {
+      const chip = el('span', {
+        class: `rail-chip${c.tx ? ' is-tx' : ''}`,
+        text: c.text,
+        style: {
+          left: `${i % 2 ? 68 : 32}%`,
+          animationDuration: `${duration}s`,
+          animationDelay: `${-(i * duration) / chips.length}s`, // negative: already spread out on first paint
+        },
+      });
+      chip.style.setProperty('--rise', `${poolH}px`);
+      return chip;
+    }));
+  }
+
+  let railResize = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(railResize);
+    railResize = setTimeout(() => { railKey = ''; renderRails(); }, 200);
+  });
+
+  function ago(ts) {
+    const s = Math.max(0, Math.round(Date.now() / 1000 - ts));
+    if (s < 60) return `${s} s ago`;
+    if (s < 3600) return `${Math.round(s / 60)} min ago`;
+    return `${Math.round(s / 3600)} h ago`;
+  }
+
+  /** Explorer: every wallet's balance as a bar, richest first. Click one to send from it. */
+  function renderWallets() {
+    const wallets = S.state.wallets.slice().sort((a, b) => b.balance - a.balance);
+    const max = Math.max(...wallets.map((w) => w.balance), 1);
+    const total = wallets.reduce((n, w) => n + w.balance, 0);
+    $('wallets-count').textContent = `${wallets.length} wallets · ${fmt(total)} coins`;
+    $('wallet-bars').replaceChildren(...wallets.map((w) => el('button', {
+      type: 'button',
+      class: `wallet-bar${w.name === 'Miner' ? ' is-miner' : ''}`,
+      'aria-pressed': w.name === S.from ? 'true' : 'false',
+      'aria-label': `${w.name}: ${w.balance} coins. Send from ${w.name}`,
+      onclick: () => {
+        S.from = w.name;
+        renderPeople(S.state.wallets);
+        renderWallets();
+        $('send-h').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+      },
+    },
+      el('span', { class: 'avatar', 'aria-hidden': 'true', text: w.name[0] }),
+      el('span', { class: 'who' }, w.name,
+        el('span', { class: 'track', 'aria-hidden': 'true' }, el('span', { style: { width: `${Math.max(2, (w.balance / max) * 100)}%` } }))),
+      el('span', { class: 'amt', text: fmt(w.balance) }))));
   }
 
   function renderDifficulty(c) {
@@ -264,7 +438,7 @@
       if (i > 0) items.push(linkSvg(false));
       items.push(el('button', {
         type: 'button',
-        class: `block-card${b.index === S.selected ? ' is-selected' : ''}${knownTip >= 0 && b.index > knownTip ? ' is-new' : ''}`,
+        class: `block-card${b.index === S.selected ? ' is-selected' : ''}${knownTip >= 0 && b.index > knownTip ? ' is-new' : ''}${i === blocks.length - 1 ? ' is-tip' : ''}`,
         'aria-pressed': b.index === S.selected ? 'true' : 'false',
         onclick: () => selectBlock(b.index),
       },
@@ -385,6 +559,7 @@
       ? `Proof for tx ${proof.tx_id.slice(0, 8)} · ${proof.step_count} hashes · ${proof.verified ? 'verified ✓' : 'FAILED'}`
       : 'Pick a transaction to see its proof path';
 
+    $('tx-count').textContent = `${d.transactions.length} in this block`;
     $('tx-list').replaceChildren(...d.transactions.map((tx, i) => el('button', {
       type: 'button', class: 'list-item', 'aria-pressed': S.proofTx === i ? 'true' : 'false',
       onclick: () => loadProof(i),
@@ -444,7 +619,9 @@
 
   function setLive(on, text) {
     $('live').classList.toggle('is-on', on);
-    $('live-text').textContent = text;
+    // "Live · host": the host part hides on narrow screens so the pill stays on one line.
+    const [head, ...rest] = text.split(' · ');
+    $('live-text').replaceChildren(head, ...(rest.length ? [el('span', { class: 'live-host', text: ` · ${rest.join(' · ')}` })] : []));
   }
 
   function logEvent(kind, msg, color) {
@@ -997,19 +1174,34 @@
     $('auto-warning').classList.toggle('hidden', !S.state.consensus.auto_mining);
 
     const peers = new Map(((S.state.network || {}).peers || []).map((p) => [p.name, p]));
-    $('everyone-count').textContent = `${wallets.length} people · ${peers.size} ledger copies`;
-    $('people-grid').replaceChildren(...wallets.map((w) => {
+    const inSync = [...peers.values()].filter((p) => p.status === 'ok').length;
+    $('everyone-count').textContent = `${wallets.length} people · ${inSync}/${peers.size} copies in sync`;
+
+    const query = ($('people-search').value || '').trim().toLowerCase();
+    const shown = wallets.filter((w) => !query || w.name.toLowerCase().includes(query));
+    $('people-grid').replaceChildren(...(shown.length ? shown.map((w) => {
       const p = peers.get(w.name);
-      const status = p ? (p.status === 'tampered' ? `⚠ copy tampered (#${p.tampered_block})` : `✓ copy in sync`) : '';
+      const bad = p && p.status === 'tampered';
+      const classes = ['person-card'];
+      if (w.name === S.newPerson) classes.push('is-new');
+      if (w.name === from) classes.push('is-selected');
       return el('button', {
-        type: 'button', class: `person-card${w.name === S.newPerson ? ' is-new' : ''}`,
-        title: `Use ${w.name} as the sender`, onclick: () => { $('manual-from').value = w.name; renderPeoplePage(); },
+        type: 'button', class: classes.join(' '),
+        'aria-pressed': w.name === from ? 'true' : 'false',
+        'aria-label': `${w.name}, ${w.balance} coins. Use as the sender`,
+        onclick: () => { $('manual-from').value = w.name; renderPeoplePage(); },
       },
         el('span', { class: 'avatar', 'aria-hidden': 'true', text: w.name[0] }),
-        el('span', { class: 'meta' }, el('b', { text: `${w.name} · ${fmt(w.balance)}` }),
-          el('span', { text: `${w.address.slice(0, 10)}… ${status}` })));
-    }));
+        el('span', { class: 'meta' },
+          el('span', { class: 'person-line' }, el('b', { text: w.name }), el('span', { class: 'person-bal', text: fmt(w.balance) })),
+          el('span', { class: 'person-sub' },
+            el('span', { class: 'mono', text: `${w.address.slice(0, 8)}…` }),
+            el('span', { class: `sync-dot${bad ? ' is-bad' : ''}`, 'aria-hidden': 'true' }),
+            el('span', { class: bad ? 'is-bad-text' : '', text: bad ? `tampered #${p.tampered_block}` : 'in sync' }))));
+    }) : [el('p', { class: 'people-empty', text: `Nobody called “${query}”. Add them on the left.` })]));
   }
+
+  $('people-search').addEventListener('input', renderPeoplePage);
 
   $('manual-from').addEventListener('change', renderPeoplePage);
 
@@ -1082,6 +1274,382 @@
     await api.post('/api/autominer', { on: false });
     refresh();
   });
+
+  // ------------------------------------------------------------------ landing page (#welcome)
+
+  function cubeSvg() {
+    const s = svg('svg', { width: 104, height: 114, viewBox: '0 0 120 132', 'aria-hidden': 'true' });
+    const face = (points, fill) => svg('polygon', { points, fill, stroke: '#10606F', 'stroke-width': 1.6, 'stroke-linejoin': 'round' });
+    s.append(
+      face('60,6 112,34 60,62 8,34', '#FAF6F0'),
+      face('8,34 60,62 60,126 8,98', '#E2F4F0'),
+      face('112,34 60,62 60,126 112,98', '#98D8D0'),
+      svg('path', { d: 'M22 58v26M34 64v26M46 70v26', stroke: '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+      svg('path', { d: 'M74 70l26-14M74 82l26-14M74 94l16-9', stroke: '#10606F', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.45 }));
+    return s;
+  }
+
+  function renderLanding() {
+    if (!S.state || !document.documentElement.classList.contains('is-landing')) return;
+    const { chain, blocks, consensus, network } = S.state;
+    const last = blocks.slice(-5);
+    const items = [];
+    last.forEach((b, i) => {
+      if (i > 0) {
+        const link = svg('svg', { class: 'lp-link', width: 64, height: 20, viewBox: '0 0 64 20', 'aria-hidden': 'true' });
+        link.append(
+          svg('path', { d: 'M6 10h52', stroke: '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+          svg('circle', { cx: 6, cy: 10, r: 5, fill: '#98D8D0' }),
+          svg('circle', { cx: 58, cy: 10, r: 5, fill: '#10606F' }));
+        items.push(link);
+      }
+      const zeros = b.hash.match(/^0*/)[0];
+      const cube = el('div', { class: 'lp-cube', style: { animationDelay: `${i * 0.45}s` } },
+        cubeSvg(),
+        el('span', { class: 'num', text: b.index === 0 ? 'Genesis' : `#${b.index}` }),
+        el('span', { class: 'hash' }, el('b', { text: zeros }), `${b.hash.slice(zeros.length, 12)}…`));
+      cube.style.setProperty('--i', String(i)); // staggers the flash when the page opens
+      items.push(cube);
+    });
+    $('landing-chain').replaceChildren(...items);
+
+    const peers = (network && network.peers) || [];
+    const inSync = peers.filter((p) => p.status === 'ok').length;
+    const sep = () => el('span', { class: 'sep', 'aria-hidden': 'true', text: '·' });
+    $('landing-capsule').replaceChildren(
+      el('span', { class: 'live-dot', 'aria-hidden': 'true' }),
+      'Live chain', sep(),
+      el('span', {}, el('span', { class: 'mono', text: fmt(chain.height) }), ' blocks'), sep(),
+      el('span', {}, el('span', { class: 'mono', text: consensus.difficulty }), ' bits difficulty'), sep(),
+      el('span', {}, el('span', { class: 'mono', text: `${inSync}/${peers.length}` }), ' ledger copies in sync'));
+    $('landing-copies').textContent = peers.length;
+    $('landing-diff').textContent = `${blocks[0].difficulty} → ${consensus.difficulty}`;
+  }
+
+  // ------------------------------------------------------------------ passcode vault
+
+  const V = { code: '', hashes: [], busy: false, newIndex: -1, lockTimer: null };
+  const PASS_LEN = 8;
+
+  async function sha256Hex(text) {
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
+    } catch (_) {
+      // Non-secure contexts have no SubtleCrypto; a simple stand-in keeps the picture working.
+      let h = 2166136261;
+      let out = '';
+      for (let r = 0; r < 8; r++) {
+        for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i) ^ r, 16777619) >>> 0;
+        out += h.toString(16).padStart(8, '0');
+      }
+      return out;
+    }
+  }
+
+  /** Each digit is a block whose hash covers the previous block's hash. */
+  async function passcodeChain(code) {
+    const hashes = [];
+    let prev = 'blockchain-lite|passcode';
+    for (const d of code) {
+      prev = await sha256Hex(`${prev}|${d}`);
+      hashes.push(prev);
+    }
+    return hashes;
+  }
+
+  function vaultCube() {
+    const s = svg('svg', { viewBox: '0 0 120 132', 'aria-hidden': 'true' });
+    s.append(
+      svg('polygon', { class: 'f-top', points: '60,6 112,34 60,62 8,34' }),
+      svg('polygon', { class: 'f-left', points: '8,34 60,62 60,126 8,98' }),
+      svg('polygon', { class: 'f-right', points: '112,34 60,62 60,126 112,98' }),
+      svg('path', { class: 'lines', d: 'M22 58v26M34 64v26M46 70v26' }));
+    return s;
+  }
+
+  function keySvg() {
+    const k = svg('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true' });
+    k.append(svg('circle', { cx: 8, cy: 15, r: 4 }), svg('path', { d: 'M11 12l9-9M17 6l2 2M15 8l2 2' }));
+    return k;
+  }
+
+  function renderVaultChain(sealed) {
+    const items = [];
+    for (let i = 0; i < PASS_LEN; i++) {
+      const filled = sealed || i < V.code.length;
+      const slot = el('div', { class: `vslot${filled ? ' is-filled' : ''}${sealed ? ' is-verified' : ''}${filled && i === V.newIndex ? ' is-new' : ''}` },
+        el('div', { class: 'vslot-cube' }, vaultCube(), el('span', { class: 'vslot-key' }, keySvg())),
+        el('span', { class: 'num', text: `#${i + 1}` }),
+        el('span', { class: 'mark', text: filled ? '•' : '–' }),
+        el('span', { class: 'hash', text: filled && V.hashes[i] ? V.hashes[i].slice(0, 6) : '······' }));
+      slot.style.setProperty('--i', String(i));
+      slot.style.setProperty('--r', `${i % 2 ? 12 : -12}deg`);
+      items.push(slot);
+      if (i < PASS_LEN - 1) {
+        const link = svg('svg', { class: `vlink${sealed || i + 1 < V.code.length ? ' is-on' : ''}`, width: 26, height: 14, viewBox: '0 0 26 14', 'aria-hidden': 'true' });
+        link.append(svg('path', { d: 'M3 7h20' }));
+        items.push(link);
+      }
+    }
+    $('vault-chain').replaceChildren(...items);
+    $('vault-progress').style.width = `${sealed ? 100 : (V.code.length / PASS_LEN) * 100}%`;
+    $('vault').classList.toggle('is-ready', V.code.length === PASS_LEN && !V.busy);
+    $('unlock-btn').disabled = V.code.length !== PASS_LEN || V.busy;
+  }
+
+  function vaultStatus(text, kind) {
+    const node = $('vault-status');
+    node.textContent = text;
+    node.className = `vault-status${kind ? ` is-${kind}` : ''}`;
+  }
+
+  function vaultLog(lines) {
+    $('vault-log').replaceChildren(...lines);
+  }
+
+  function logLine(text, end, good) {
+    return el('div', {}, el('span', { style: { color: 'var(--teal-400)' }, text: '› ' }), `${text} `,
+      el('span', { style: { fontWeight: 600, color: good ? 'var(--teal-400)' : '#F0A592' }, text: end }));
+  }
+
+  /** The vault as it should look for this session: locked (enter a code) or already unlocked. */
+  function renderVault() {
+    const vault = $('vault');
+    if (V.busy) return;
+    const open = isUnlocked();
+    vault.className = `vault ${open ? 'is-open' : 'is-entering'}`;
+    $('passcode').classList.toggle('hidden', open);
+    document.querySelector('.vault-label').classList.toggle('hidden', open);
+    document.querySelector('.vault-unlock-wrap').classList.toggle('hidden', open);
+    $('enter-btn').classList.toggle('hidden', !open);
+    $('relock-btn').classList.toggle('hidden', !open);
+    $('vault-h').textContent = open ? 'The vault is open' : 'Enter the 8-digit passcode';
+    if (open) {
+      V.code = '';
+      V.hashes = [];
+      vaultStatus('This browser session is unlocked.', 'ok');
+      vaultLog([logLine('session key on file', '✓', true), logLine('open the Explorer whenever you like', '', true)]);
+      renderVaultChain(true);
+      $('unlock-btn').disabled = true;
+    } else {
+      renderVaultChain();
+      if (!$('vault-log').children.length) vaultLog([el('div', { class: 'muted-line', text: '› waiting for 8 sealed blocks…' })]);
+    }
+  }
+
+  function setPasscode(raw) {
+    if (V.busy) return;
+    const clean = raw.replace(/[^0-9]/g, '').slice(0, PASS_LEN);
+    V.newIndex = clean.length > V.code.length ? clean.length - 1 : -1;
+    V.code = clean;
+    if ($('passcode').value !== clean) $('passcode').value = clean;
+    renderVaultChain();
+    vaultStatus(clean.length === PASS_LEN ? 'All 8 blocks sealed — unlocking…' : `${clean.length} of 8 blocks sealed · ${PASS_LEN - clean.length} to go`);
+    passcodeChain(clean).then((hashes) => {
+      if (V.code !== clean) return;
+      V.hashes = hashes;
+      V.newIndex = -1;
+      renderVaultChain();
+    });
+    if (clean.length === PASS_LEN) setTimeout(() => { if (V.code === clean) unlock(); }, 600);
+  }
+
+  async function unlock() {
+    if (V.busy || V.code.length !== PASS_LEN) return;
+    V.busy = true;
+    const vault = $('vault');
+    const code = V.code;
+    vault.className = 'vault is-verifying';
+    $('passcode').disabled = true;
+    $('unlock-btn').disabled = true;
+    vaultStatus('Verifying your key chain with the node…');
+    const hashes = V.hashes.length === PASS_LEN ? V.hashes : await passcodeChain(code);
+    let result;
+    try {
+      result = await api.post('/api/unlock', { passcode: code });
+    } catch (err) {
+      result = { granted: false, attempts_left: null, locked_for: 0, error: err.message };
+    }
+    const lines = [
+      logLine('sealing 8 digits into blocks', 'ok', true),
+      logLine('chaining SHA-256 hashes', 'ok', true),
+      logLine('key fingerprint', `${hashes[PASS_LEN - 1].slice(0, 16)}…`, true),
+      logLine(`handshake with node ${location.host}`, 'ok', true),
+      logLine('verifying key chain against the node', result.granted ? 'match' : 'MISMATCH', result.granted),
+    ];
+    if (result.granted) lines.push(logLine('access granted · opening the ledger', '✓', true));
+    const shown = [];
+    const slots = [...document.querySelectorAll('.vslot')];
+    const step = reducedMotion ? 0 : 230;
+    lines.forEach((line, i) => setTimeout(() => {
+      shown.push(line);
+      vaultLog([...shown, el('span', { class: 'cursor' })]);
+    }, step * (i + 1)));
+    slots.forEach((slot, i) => setTimeout(() => slot.classList.add('is-verified'), reducedMotion ? 0 : 90 + i * 110));
+    setTimeout(() => (result.granted ? vaultGranted(hashes) : vaultDenied(result)), reducedMotion ? 0 : step * (lines.length + 1));
+  }
+
+  function vaultGranted(hashes) {
+    try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch (_) { /* session only */ }
+    $('vault').className = 'vault is-granted';
+    vaultStatus('Access granted. Welcome to the chain.', 'ok');
+    burstAndOpen(hashes);
+  }
+
+  /** The sealed blocks burst across the screen, a teal iris closes over it, and the Explorer opens. */
+  function burstAndOpen(hashes) {
+    const fx = $('vault-fx');
+    const landing = $('landing');
+    if (reducedMotion) {
+      finishOpen();
+      return;
+    }
+    const wellBox = document.querySelector('.vault-well').getBoundingClientRect();
+    const cx = wellBox.left + wellBox.width / 2;
+    const cy = wellBox.top + wellBox.height / 2;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const at = (node, x, y) => { node.style.left = `${x}px`; node.style.top = `${y}px`; return node; };
+    const pieces = [];
+    ['0s', '.2s', '.4s'].forEach((delay, i) => {
+      const ring = at(el('span', { class: 'fx-ring', style: { animationDelay: delay, borderColor: ['#4FB8B4', '#10606F', '#E8DDCF'][i] } }), cx, cy);
+      pieces.push(ring);
+    });
+    const spots = [[-0.38, -0.36], [-0.17, -0.42], [0.17, -0.42], [0.38, -0.36], [-0.42, 0.12], [-0.2, 0.3], [0.2, 0.3], [0.42, 0.12]];
+    spots.forEach(([fx2, fy], i) => {
+      const flyer = at(el('div', { class: 'fx-flyer', style: { animationDelay: `${i * 0.05}s` } }, vaultCube(), el('span', { text: `#${i + 1}` })), cx, cy);
+      flyer.querySelector('svg').classList.add('is-filled');
+      ['f-top', 'f-left', 'f-right'].forEach((cls, k) => {
+        flyer.querySelector(`.${cls}`).setAttribute('style', `fill:${['#FAF6F0', '#98D8D0', '#4FB8B4'][k]};stroke:#10606F;stroke-width:2.5;stroke-linejoin:round`);
+      });
+      flyer.querySelector('.lines').setAttribute('style', 'stroke:#10606F;stroke-width:3;stroke-linecap:round;opacity:.55');
+      flyer.style.setProperty('--tx', `${Math.round(fx2 * w)}px`);
+      flyer.style.setProperty('--ty', `${Math.round(fy * h)}px`);
+      flyer.style.setProperty('--rot', `${(i % 2 ? 1 : -1) * (25 + i * 3)}deg`);
+      pieces.push(flyer);
+    });
+    for (let i = 0; i < 20; i++) {
+      const a = (i / 20) * Math.PI * 2;
+      const r = Math.min(w, h) * (0.32 + (i % 4) * 0.07);
+      const src = hashes[i % PASS_LEN] || '';
+      const dark = i % 3 === 0;
+      const spark = at(el('span', {
+        class: 'fx-spark',
+        text: src.slice((i * 3) % 40, ((i * 3) % 40) + 6),
+        style: { background: dark ? '#10606F' : '#F8F4EC', color: dark ? '#FAF6F0' : '#10606F', animationDelay: `${0.1 + (i % 5) * 0.06}s` },
+      }), cx, cy);
+      spark.style.setProperty('--tx', `${Math.round(Math.cos(a) * r)}px`);
+      spark.style.setProperty('--ty', `${Math.round(Math.sin(a) * r * 0.7)}px`);
+      pieces.push(spark);
+    }
+    pieces.push(el('div', { class: 'fx-title' }, el('b', { text: 'Access granted' }),
+      el('span', { text: `key chain verified · session key ${hashes[PASS_LEN - 1].slice(0, 8)}` })));
+    fx.replaceChildren(...pieces);
+    fx.classList.add('is-on');
+    landing.classList.add('is-granted');
+    document.querySelectorAll('.vslot').forEach((slot) => slot.classList.add('is-gone'));
+    setTimeout(() => fx.append(at(el('span', { class: 'fx-iris' }), w / 2, h / 2)), 1600);
+    setTimeout(() => {
+      finishOpen();
+      fx.classList.remove('is-on');
+      fx.replaceChildren();
+      landing.classList.remove('is-granted');
+    }, 2700);
+  }
+
+  function finishOpen() {
+    V.busy = false;
+    V.code = '';
+    V.hashes = [];
+    $('passcode').value = '';
+    $('passcode').disabled = false;
+    // A direct link to an app page opens that page once unlocked; otherwise the Explorer.
+    const wanted = location.hash.slice(1);
+    const target = VIEWS.includes(wanted) ? wanted : 'explorer';
+    if (wanted === target) route();
+    else location.hash = `#${target}`;
+    if (reducedMotion) return;
+    const veil = $('reveal-veil');
+    const revealed = [document.querySelector('.topbar'), $(`view-${target}`)];
+    veil.classList.add('is-on');
+    revealed.forEach((n) => n.classList.add('is-revealing'));
+    setTimeout(() => veil.classList.remove('is-on'), 750);
+    setTimeout(() => revealed.forEach((n) => n.classList.remove('is-revealing')), 1300);
+  }
+
+  function vaultDenied(result) {
+    const vault = $('vault');
+    const locked = result.locked_for > 0;
+    vault.className = `vault ${locked ? 'is-locked' : 'is-denied'}`;
+    document.querySelectorAll('.vslot.is-filled').forEach((slot) => {
+      slot.classList.remove('is-verified');
+      slot.classList.add('is-denied', 'is-falling');
+    });
+    const left = result.attempts_left;
+    $('alarm-title').textContent = locked ? 'Node locked' : 'Incorrect passcode';
+    $('alarm-text').textContent = result.error
+      ? `The node could not check the passcode: ${result.error}`
+      : locked
+        ? 'Too many wrong passcodes. Wait for the lock to clear, then enter the right passcode.'
+        : 'This key chain does not match the node. Make the passcode right and try again.';
+    $('alarm-chip').textContent = locked ? `try again in ${Math.ceil(result.locked_for)} s` : left === null ? 'try again' : `${left} attempt${left === 1 ? '' : 's'} left`;
+    vaultStatus(locked ? `Locked · try again in ${Math.ceil(result.locked_for)} s` : `Incorrect passcode${left === null ? '' : ` · ${left} attempt${left === 1 ? '' : 's'} left`}`, 'error');
+    const alarm = $('vault-alarm');
+    alarm.classList.remove('hidden');
+    const reset = () => {
+      alarm.classList.add('hidden');
+      V.busy = false;
+      V.code = '';
+      V.hashes = [];
+      $('passcode').value = '';
+      $('passcode').disabled = false;
+      vault.className = 'vault is-entering';
+      renderVaultChain();
+      vaultLog([el('div', { class: 'muted-line', text: '› waiting for 8 sealed blocks…' })]);
+      $('passcode').focus({ preventScroll: true });
+    };
+    if (!locked) {
+      setTimeout(() => { reset(); vaultStatus(`Try again · ${left === null ? '' : `${left} attempt${left === 1 ? '' : 's'} left`}`, 'error'); }, reducedMotion ? 1200 : 2600);
+      return;
+    }
+    let remaining = Math.ceil(result.locked_for);
+    clearInterval(V.lockTimer);
+    V.lockTimer = setInterval(() => {
+      remaining -= 1;
+      $('alarm-chip').textContent = `try again in ${remaining} s`;
+      vaultStatus(`Locked · try again in ${remaining} s`, 'error');
+      if (remaining === Math.ceil(result.locked_for) - 3) alarm.classList.add('hidden');
+      if (remaining <= 0) {
+        clearInterval(V.lockTimer);
+        reset();
+        vaultStatus('Lock cleared · enter the passcode', 'ok');
+      }
+    }, 1000);
+  }
+
+  $('passcode').addEventListener('input', (ev) => setPasscode(ev.target.value));
+  $('passcode').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') unlock(); });
+  $('unlock-btn').addEventListener('click', unlock);
+  $('enter-btn').addEventListener('click', () => {
+    $('vault').className = 'vault is-granted';
+    burstAndOpen(Array.from({ length: PASS_LEN }, (_, i) => (S.state ? S.state.blocks[S.state.blocks.length - 1 - (i % S.state.blocks.length)].hash : '')));
+  });
+  $('relock-btn').addEventListener('click', () => {
+    try { sessionStorage.removeItem(UNLOCK_KEY); } catch (_) { /* nothing stored */ }
+    V.busy = false;
+    $('vault-log').replaceChildren();
+    renderVault();
+    vaultStatus('Locked again · enter the passcode to open the app');
+    $('passcode').focus({ preventScroll: true });
+  });
+
+  document.querySelectorAll('[data-scroll]').forEach((a) => a.addEventListener('click', (ev) => {
+    // In-page anchors on the landing page scroll instead of changing the route.
+    ev.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+  }));
 
   // ------------------------------------------------------------------ boot
 

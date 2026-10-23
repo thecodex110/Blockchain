@@ -87,6 +87,9 @@ python3 -m viz.render --block 10
 # Difficulty retargeting (on by default): target 10 s per block, checked every 4 blocks
 python3 -m web.bridge --block-time 10 --retarget-interval 4 --auto-mine
 python3 -m web.bridge --retarget-interval 0     # fixed difficulty, as before
+
+# The welcome page asks for an 8-digit passcode (demo default 12345678)
+python3 -m web.bridge --passcode 24681357
 ```
 
 Difficulty follows the consensus rule in `ledger/consensus.py`: every `retarget_interval` blocks, if the recent blocks came faster than 0.75× the target it rises by one bit (twice the expected work), slower than 1.33× it drops by one bit. **Auto-mine** keeps a background miner running, so you can watch the difficulty climb until blocks take about the target time.
