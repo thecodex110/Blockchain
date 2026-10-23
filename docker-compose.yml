@@ -1,7 +1,4 @@
-# Blockchain-Lite (Terminal Only Edition)
-#   docker compose run --rm terminal                  # interactive terminal console
-#   docker compose --profile demo run --rm cli-demo   # 6-stage CLI demonstration
-#   docker compose --profile test run --rm test-suite # full automated test-suite
+
 
 services:
   terminal:
