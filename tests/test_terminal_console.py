@@ -93,7 +93,11 @@ class TestTerminalConsole(unittest.TestCase):
             self.console.show_wallets()
         output = buf.getvalue()
         self.assertIn("WALLETS & BALANCES", output)
-        for name in ("Alice", "Bob", "Charlie", "Miner"):
+        for name in (
+            "Alice", "Bob", "Charlie", "Dave", "Eve", "Frank", "Grace", "Heidi",
+            "Ivan", "Judy", "Karl", "Lisa", "Mallory", "Nina", "Oscar", "Priya",
+            "Quinn", "Rachel", "Sam", "Tina", "Miner",
+        ):
             self.assertIn(name, output)
 
     def test_send_transfer_and_mine(self) -> None:
@@ -113,7 +117,7 @@ class TestTerminalConsole(unittest.TestCase):
         mine_output = buf.getvalue()
         self.assertIn("BLOCK MINED SUCCESSFULLY", mine_output)
         self.assertEqual(len(self.ledger.mempool), 0)
-        self.assertEqual(self.ledger.height, 3)
+        self.assertEqual(self.ledger.height, 12)
 
     def test_verify_merkle_proof(self) -> None:
         # Verify transaction 0 in block 1

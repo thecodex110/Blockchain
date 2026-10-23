@@ -1,0 +1,3 @@
+# Optional: only needed for Manim renders (python3 -m viz.render / web.bridge --render).
+# Manim also needs system libraries: cairo, pango and ffmpeg (macOS: brew install cairo pango ffmpeg).
+manim>=0.18
