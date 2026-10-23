@@ -39,7 +39,31 @@ Useful variations:
 | `python3 -m web.bridge --audit-interval 10` | Check everyone's ledger copy every 10 seconds instead of 20 |
 | `python3 -m web.bridge --render` | Also render a Manim video of every new block (needs Manim) |
 
-The app has four pages. Switch with the pill menu at the top; the address bar shows `#explorer`, `#forge`, `#tamper` or `#people`, so you can bookmark a page.
+The app opens on a **welcome page** (§1.1). Behind it are four pages; switch with the pill menu at the top. The address bar shows `#explorer`, `#forge`, `#tamper` or `#people`, so you can bookmark a page — opening one of those addresses skips the welcome page.
+
+### 1.1 Welcome page and the Open animation
+
+Shown at `http://127.0.0.1:8080` (or `#welcome`), in the same cream-and-teal look as the app.
+
+| Element | What it shows / does |
+| :--- | :--- |
+| **Welcome to the *Blockchain* Visualization Project** | The title, with a one-line description underneath |
+| **Open** (teal, with pulsing rings) | Opens the app with an animation (below), then lands on the Explorer |
+| **See what’s inside** / **What’s inside**, **From scratch** | Scroll down to the matching section of the welcome page |
+| **GitHub** | Opens the project repository in a new tab |
+| **Floating blocks** | The real last five blocks of the chain, joined by moving links. The bold leading zeros of each hash are its proof-of-work |
+| **Black capsule** | Live numbers: height, current difficulty, and how many ledger copies are in sync |
+| **Four cards** | Explorer, Block Forge, Tamper Lab, People — click one to jump straight to that page |
+| **Built from first principles** | 122 tests, no third-party packages in the core, the number of ledger copies, and the difficulty range so far |
+
+What **Open** does (about 2 seconds):
+1. The button presses in and shrinks away; the text lifts up and blurs out.
+2. The five blocks flash teal one after another, left to right.
+3. Three rings spread out from the button.
+4. A deep-teal circle grows from the button until it fills the screen.
+5. The Explorer appears; the teal veil fades and the cards rise in one after another.
+
+With the operating system's *reduce motion* setting on, **Open** goes straight to the Explorer. Click the **Blockchain-Lite** logo in the app to come back to the welcome page.
 
 ---
 
@@ -47,7 +71,7 @@ The app has four pages. Switch with the pill menu at the top; the address bar sh
 
 | Element | What it shows / does |
 | :--- | :--- |
-| **Blockchain-Lite** logo | Goes back to Explorer |
+| **Blockchain-Lite** logo | Goes back to the welcome page |
 | **Explorer · Block Forge · Tamper Lab · People** | Page switcher. The raised pill is the page you are on |
 | **Live pill** (black, right) | Connection to the bridge's live event stream. Pulsing teal dot + `Live · 127.0.0.1:8080` = connected. `Reconnecting…` = the stream dropped and the browser is retrying. `Bridge unreachable: …` = the server is not running |
 
