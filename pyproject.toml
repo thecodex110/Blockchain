@@ -34,8 +34,8 @@ classifiers = [
 dependencies = []
 
 [project.scripts]
+blockchain-lite-terminal = "blockchain_lite.cli.terminal:main"
 blockchain-lite-demo = "blockchain_lite.cli.demo:main"
-blockchain-lite-dashboard = "blockchain_lite.network.web_dashboard:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -241,7 +241,6 @@ class TestExclusionsCompliance(unittest.TestCase):
         "blockchain_lite/network/transport.py",
         "blockchain_lite/network/server.py",
         "blockchain_lite/network/client.py",
-        "blockchain_lite/network/web_dashboard.py",
         "blockchain_lite/wallet/demo_wallets.py",
         "blockchain_lite/cli/__init__.py",
         "blockchain_lite/cli/demo.py",

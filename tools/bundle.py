@@ -44,8 +44,9 @@ ORDERED_MODULES = [
     ("SECTION 16: FRAMED NETWORK TRANSPORT & PROTOCOL ENVELOPE", "blockchain_lite/network/transport.py"),
     ("SECTION 17: LEDGER TCP SOCKET SERVER & DISPATCHER", "blockchain_lite/network/server.py"),
     ("SECTION 18: DIGITAL WALLET CLIENT & TCP TRANSPORT", "blockchain_lite/network/client.py"),
-    ("SECTION 19: WEB EXPLORER & LIVE DASHBOARD", "blockchain_lite/network/web_dashboard.py"),
-    ("SECTION 20: END-TO-END DEMO HARNESS", "blockchain_lite/cli/demo.py"),
+    ("SECTION 19: DEMO WALLETS FACTORY", "blockchain_lite/wallet/demo_wallets.py"),
+    ("SECTION 20: INTERACTIVE TERMINAL CONSOLE", "blockchain_lite/cli/terminal.py"),
+    ("SECTION 21: END-TO-END DEMO HARNESS", "blockchain_lite/cli/demo.py"),
 ]
 
 # Standard library imports to collect and place at the very top
@@ -259,11 +260,14 @@ def run_full_test_suite() -> int:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Blockchain-Lite Monolithic Bundle")
+    parser = argparse.ArgumentParser(description="Blockchain-Lite Monolithic Bundle (Terminal Edition)")
     parser.add_argument("--demo", action="store_true", help="Run the full 6-stage interactive evaluation demo")
     parser.add_argument("--test", action="store_true", help="Execute the complete automated verification suite")
-    parser.add_argument("--dashboard", action="store_true", help="Launch the interactive Web Explorer & Dashboard")
-    parser.add_argument("--port", type=int, default=8080, help="Web Dashboard port (default: 8080)")
+    parser.add_argument("--terminal", action="store_true", help="Launch interactive Terminal Console & Explorer")
+    parser.add_argument("--status", action="store_true", help="Print current blockchain status and exit")
+    parser.add_argument("--benchmark", action="store_true", help="Run PoW difficulty benchmark and exit")
+    parser.add_argument("--fast-hash", action="store_true", help="Use optional hashlib SHA-256 backend")
+    parser.add_argument("--rsa-bits", type=int, default=384, help="RSA modulus size for demo wallets (default 384)")
     parser.add_argument("--unpack", type=str, metavar="DEST_DIR", help="Unpack modular project files to target directory")
 
     args = parser.parse_args()
@@ -272,23 +276,21 @@ def main() -> None:
         sys.exit(unpack_repository(Path(args.unpack)))
     elif args.test:
         sys.exit(run_full_test_suite())
-    elif args.dashboard:
-        print(weak_key_warning(384), file=sys.stderr)
-        print("[*] Initializing Blockchain-Lite Web Explorer (demo; loopback only)...")
-        ledger, wallets = create_demo_ledger_and_wallets()
-        server = WebDashboardServer(ledger=ledger, named_wallets=wallets, host="127.0.0.1", port=args.port)
-        server.start()
-        print(f"[+] Live at: {server.url}")
-        print(f"[+] API token for POST routes (the page sends it automatically): {server.api_token}")
-        try:
-            while True:
-                time.sleep(1.0)
-        except KeyboardInterrupt:
-            server.stop()
-            print("\\n[+] Web server terminated cleanly.")
+    elif args.demo:
+        print(run_complete_demonstration(rsa_bits=args.rsa_bits))
+    elif args.benchmark:
+        print(generate_full_experiment_report(difficulties=(0, 2, 4, 6), trials_per_difficulty=2))
     else:
-        # Default behavior: run complete demonstration
-        print(run_complete_demonstration())
+        warn = weak_key_warning(args.rsa_bits)
+        if warn:
+            print(warn, file=sys.stderr)
+        hasher = HashlibSHA256() if args.fast_hash else default_hasher
+        ledger, wallets = create_demo_ledger_and_wallets(hasher=hasher, rsa_bits=args.rsa_bits)
+        console = TerminalConsole(ledger=ledger, wallets=wallets, hasher=hasher)
+        if args.status:
+            console.show_chain_status()
+        else:
+            console.run_loop()
 
 
 if __name__ == "__main__":

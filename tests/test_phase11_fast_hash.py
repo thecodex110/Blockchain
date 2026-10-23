@@ -121,8 +121,8 @@ class TestFastHashIsOptIn(unittest.TestCase):
         self.assertEqual(names, ["BitLevelSHA256", "HashlibSHA256"])
         self.assertTrue(all(hps > 0 for _, hps in rows))
 
-    def test_dashboard_demo_ledger_accepts_hasher(self) -> None:
-        from blockchain_lite.network.web_dashboard import create_demo_ledger_and_wallets
+    def test_demo_ledger_accepts_hasher(self) -> None:
+        from blockchain_lite.wallet.demo_wallets import create_demo_ledger_and_wallets
         ledger, _ = create_demo_ledger_and_wallets(hasher=FAST)
         self.assertIs(ledger._hasher, FAST)
         replica = BlockchainLedger(difficulty=ledger.difficulty, block_reward=ledger.block_reward)
