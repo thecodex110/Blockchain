@@ -1,7 +1,7 @@
 /* Blockchain-Lite web frontend: cream neumorphic surfaces, teal accents, black capsule gauges. */
 
 :root {
-  --ground: #efe9df2d;
+  --ground: #EFE9DF;
   --card: #F8F4EC;
   --well: #F1ECE3;
   --track: #E6DED0;
@@ -426,9 +426,13 @@ button:disabled {
 }
 
 .next-card .btn-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  flex-wrap: wrap;
+}
+
+.next-card .btn-row .btn {
+  padding: 0 12px;
 }
 
 @keyframes slot-pulse {
@@ -507,8 +511,15 @@ button:disabled {
   height: 34px;
   margin-top: 18px;
   border-radius: 999px;
-  overflow: hidden;
   box-shadow: var(--inset);
+}
+
+.pace-zone:first-child {
+  border-radius: 999px 0 0 999px;
+}
+
+.pace-slow {
+  border-radius: 0 999px 999px 0;
 }
 
 .pace-zone {
@@ -536,22 +547,23 @@ button:disabled {
   color: #4A3F30;
 }
 
+/* A pointer under the bar, so it never covers the zone labels. */
 .pace-marker {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  width: 6px;
-  margin-left: -3px;
-  border-radius: 999px;
-  background: var(--night);
-  box-shadow: 0 0 0 3px var(--cream);
+  top: calc(100% + 3px);
+  width: 0;
+  height: 0;
+  margin-left: -7px;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 10px solid var(--night);
   transition: left 0.6s cubic-bezier(.2, .8, .2, 1);
 }
 
 .pace-scale {
   position: relative;
   height: 18px;
-  margin-top: 6px;
+  margin-top: 16px;
   font-family: var(--mono);
   font-size: 11px;
   color: var(--muted);
@@ -617,11 +629,12 @@ button:disabled {
   flex: 0 0 132px;
   background: var(--night);
   border-radius: 66px;
-  padding: 30px 0 18px;
+  padding: 30px 0 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
+  justify-content: space-evenly;
+  gap: 18px;
   color: var(--teal-50);
   box-shadow: 12px 12px 28px rgba(12, 26, 29, 0.3);
 }
@@ -2497,5 +2510,1561 @@ html.is-landing body {
 
   .landing-scratch {
     padding: 24px;
+  }
+}
+
+/* ------------------------------------------------------------------ layout polish: no empty gaps */
+
+.topbar .live {
+  white-space: nowrap;
+}
+
+/* Columns in a row stretch to the same height; a side column's last card takes the spare room. */
+.side > .fill-card,
+.stack-col > .fill-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.stack-col {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Long lists scroll inside their card instead of stretching the page. */
+.scroll-box {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--teal-200) transparent;
+  padding: 4px 6px 4px 2px;
+  margin-right: -6px;
+}
+
+.scroll-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-box::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--teal-200);
+}
+
+.tx-scroll {
+  max-height: 360px;
+}
+
+.fill-card .scroll-box {
+  flex: 1 1 0;
+  min-height: 320px;
+}
+
+/* Fills whatever height the left column gives the card, and scrolls past that. */
+.people-scroll {
+  align-content: start;
+}
+
+/* Next block card: last block + the five build steps fill the column. */
+.next-extra {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.last-block {
+  border-radius: 20px;
+  padding: 16px 18px;
+}
+
+.last-block-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.last-num {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.last-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.last-facts dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.last-facts dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.build-steps ol {
+  list-style: none;
+  margin: 10px 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.build-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.build-steps li > span:first-child {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--teal-50);
+  color: var(--teal-900);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.build-link {
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Wallet balance bars (Explorer). */
+.wallet-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wallet-bar {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.wallet-bar:hover,
+.wallet-bar[aria-pressed="true"] {
+  background: var(--well);
+}
+
+.wallet-bar .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--teal-50);
+  color: var(--teal-900);
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.wallet-bar .track {
+  display: block;
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.wallet-bar .track > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--teal-400);
+  transition: width 0.6s ease;
+}
+
+.wallet-bar.is-miner .track > span {
+  background: var(--teal-900);
+}
+
+.wallet-bar .who {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wallet-bar .amt {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* People page: journey steps and network numbers. */
+.journey {
+  list-style: none;
+  counter-reset: step;
+  margin: 16px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.journey li {
+  counter-increment: step;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 14px 44px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.journey li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--teal-900);
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.journey li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 32px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--teal-200);
+}
+
+.journey b {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 30px;
+}
+
+.journey-stats {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.journey-stats div {
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: var(--well);
+  box-shadow: var(--inset);
+  text-align: center;
+}
+
+.journey-stats b {
+  display: block;
+  font-family: var(--serif);
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.journey-stats span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Everyone: search + clean person cards. */
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-bottom: 14px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: var(--well);
+  box-shadow: var(--inset);
+  color: var(--muted);
+}
+
+.search-field input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+  outline: none;
+}
+
+.people-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.person-card {
+  align-items: center;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.person-card:hover {
+  transform: translateY(-1px);
+  background: var(--card);
+  box-shadow: var(--raised-sm);
+}
+
+.person-card.is-selected {
+  background: var(--card);
+  box-shadow: 0 0 0 2px var(--teal-400), var(--raised-sm);
+}
+
+.person-card .meta {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.person-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.person-line b {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.person-bal {
+  flex-shrink: 0;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--teal-50);
+  color: var(--teal-900);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.person-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.person-sub .mono {
+  margin-right: auto;
+  font-size: 12px;
+}
+
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal-400);
+}
+
+.sync-dot.is-bad {
+  background: var(--danger);
+}
+
+.person-sub .is-bad-text {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.people-empty {
+  grid-column: 1 / -1;
+  margin: 8px 0;
+  color: var(--muted);
+}
+
+@media (max-width: 1180px) {
+  .live-host {
+    display: none;
+  }
+}
+
+/* People page: the five steps of a transfer, as one strip in the Pending card. */
+.journey-strip {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.journey-strip li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  background: var(--well);
+  box-shadow: inset 2px 2px 6px rgba(150, 136, 112, 0.22), inset -2px -2px 6px rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.journey-strip b {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--teal-900);
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------------ ambient blockchain animation */
+
+.topbar,
+.page {
+  position: relative;
+  z-index: 1;
+}
+
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+html.is-landing .ambient {
+  display: none;
+}
+
+.ambient-orbit {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 1180px;
+  height: 1180px;
+  border-radius: 50%;
+  border: 1px solid rgba(16, 96, 111, 0.08);
+  transform: translate(-50%, -50%);
+}
+
+.ambient-orbit.is-dashed {
+  width: 860px;
+  height: 860px;
+  border: 1.5px dashed rgba(16, 96, 111, 0.12);
+  animation: lp-orbit 120s linear infinite;
+}
+
+/* The rails live in the empty margins beside the 1360px content column. */
+.ambient-rail {
+  display: none;
+  position: absolute;
+  top: 110px;
+  bottom: 24px;
+  width: calc((100vw - 1360px) / 2 - 20px);
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.ambient-rail.is-left {
+  left: 10px;
+}
+
+.ambient-rail.is-right {
+  right: 10px;
+}
+
+@media (min-width: 1560px) {
+  .ambient-rail {
+    display: flex;
+  }
+}
+
+.rail-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--night);
+  color: var(--teal-50);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rail-title .live-dot {
+  background: var(--teal-400);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.rail-chain {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rail-cube {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  animation: lp-float 5s ease-in-out infinite;
+}
+
+.rail-cube svg {
+  width: 74px;
+  height: 81px;
+  overflow: visible;
+  filter: drop-shadow(6px 10px 12px rgba(150, 136, 112, 0.32));
+}
+
+.rail-cube .num {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.rail-cube .hash {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.rail-cube .hash b {
+  color: var(--teal-900);
+}
+
+/* A freshly mined block drops onto the top of the chain and flashes. */
+.rail-cube.is-dropping {
+  animation: rail-drop 1s cubic-bezier(.2, .9, .3, 1.2) both, lp-float 5s ease-in-out 1s infinite;
+}
+
+.rail-cube.is-dropping svg {
+  animation: lp-flash 1.2s ease-out 0.5s both;
+}
+
+.rail-link {
+  flex-shrink: 0;
+}
+
+.rail-link path {
+  stroke-dasharray: 6 6;
+  animation: rail-flow 1.4s linear infinite;
+}
+
+.rail-next {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.rail-next svg {
+  width: 84px;
+  height: 92px;
+  overflow: visible;
+  animation: ghost-breathe 3s ease-in-out infinite;
+}
+
+.ambient.is-mining .rail-next svg {
+  animation-duration: 0.9s;
+}
+
+.rail-next .num {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.rail-next .sub {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Pending transactions (or, when empty, hash fragments) float up into the next block. */
+.rail-pool {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 200px;
+}
+
+.rail-chip {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: var(--raised-sm);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--teal-900);
+  white-space: nowrap;
+  animation: rail-rise 9s linear infinite;
+}
+
+.rail-chip.is-tx {
+  background: var(--teal-900);
+  color: var(--cream);
+  font-weight: 600;
+  animation-duration: 6s;
+}
+
+@keyframes rail-drop {
+  0% { opacity: 0; transform: translateY(-90px) scale(0.85); }
+  70% { opacity: 1; transform: translateY(6px) scale(1.02); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes rail-flow {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes ghost-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.75; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes rail-rise {
+  0% { transform: translate(-50%, 0); opacity: 0; }
+  12% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(-50%, calc(-1 * var(--rise, 320px))); opacity: 0; }
+}
+
+/* ------------------------------------------------------------------ motion inside the pages */
+
+/* Every page change: cards rise in one after another. */
+.page.is-revealing .row > *,
+.page.is-revealing .stats > *,
+.page.is-revealing .copies > *,
+.page.is-revealing .people-grid > *,
+.page.is-revealing .landing-features > * {
+  animation: lp-rise 0.6s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.page.is-revealing .stats > *:nth-child(2),
+.page.is-revealing .row > *:nth-child(2) { animation-delay: 0.08s; }
+.page.is-revealing .stats > *:nth-child(3),
+.page.is-revealing .row > *:nth-child(3) { animation-delay: 0.16s; }
+.page.is-revealing .stats > *:nth-child(4) { animation-delay: 0.22s; }
+.page.is-revealing .stats > *:nth-child(5) { animation-delay: 0.28s; }
+
+/* Chain links: data flows from each block to the next. */
+.link .flow {
+  stroke-dasharray: 8 7;
+  animation: lp-dash 1.6s linear infinite;
+}
+
+/* The tip block breathes a teal ring. */
+.block-card {
+  position: relative;
+}
+
+.block-card.is-tip::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 31px;
+  border: 2px solid var(--teal-400);
+  opacity: 0;
+  pointer-events: none;
+  animation: tip-ring 2.6s ease-out infinite;
+}
+
+.pending-block {
+  animation: ghost-breathe 3s ease-in-out infinite;
+}
+
+/* Next block square: the coinbase breathes; while mining a scan line sweeps the slots. */
+.block-box {
+  position: relative;
+  overflow: hidden;
+}
+
+.slot-cell.is-coinbase {
+  animation: cb-glow 2.8s ease-in-out infinite;
+}
+
+.is-mining .block-box::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--teal-400);
+  box-shadow: 0 0 14px 4px rgba(79, 184, 180, 0.55);
+  animation: scan 1.1s ease-in-out infinite alternate;
+}
+
+/* Small stat cards lift on hover. */
+.card-sm {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-sm:hover {
+  transform: translateY(-3px);
+}
+
+/* Bars and gauges grow in when a page opens. */
+.page.is-revealing .effort-fill {
+  animation: grow-up 0.9s cubic-bezier(.2, .8, .2, 1) both;
+  transform-origin: bottom;
+}
+
+.page.is-revealing .gauge-ring .g-fg {
+  animation: draw-ring 1.1s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.stat-value span.is-counting {
+  color: var(--teal-900);
+}
+
+@keyframes tip-ring {
+  0% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+
+@keyframes cb-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 184, 180, 0); }
+  50% { box-shadow: 0 0 14px 2px rgba(79, 184, 180, 0.55); }
+}
+
+@keyframes scan {
+  from { top: 10px; }
+  to { top: calc(100% - 13px); }
+}
+
+@keyframes grow-up {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes draw-ring {
+  from { stroke-dashoffset: 188; }
+  to { stroke-dashoffset: 0; }
+}
+
+.page.is-revealing > .row {
+  animation: none;
+}
+
+/* The pool fills the rail: a dashed stream flows up the middle and chips ride it to the next block. */
+.rail-pool #rail-pool {
+  position: absolute;
+  inset: 0;
+}
+
+.rail-stream {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background-image: repeating-linear-gradient(to top, rgba(79, 184, 180, 0.55) 0 6px, transparent 6px 14px);
+  background-size: 2px 14px;
+  animation: stream-up 1.2s linear infinite;
+}
+
+.rail-stream::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--teal-900);
+  box-shadow: 0 0 0 4px rgba(79, 184, 180, 0.25);
+}
+
+.rail-chip {
+  animation-timing-function: linear;
+}
+
+@keyframes stream-up {
+  to { background-position: 0 -14px; }
+}
+
+/* ------------------------------------------------------------------ passcode vault (welcome page) */
+
+.vault-wrap {
+  position: relative;
+  z-index: 40;
+  width: 100%;
+  max-width: 1000px;
+  margin: 40px auto 0;
+  text-align: left;
+}
+
+.vault-chips {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.vault-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: var(--raised-sm);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal-900);
+  white-space: nowrap;
+  animation: lp-float 5.5s ease-in-out infinite;
+}
+
+@media (max-width: 1360px) {
+  .vault-chips {
+    display: none;
+  }
+}
+
+.vault {
+  --vault-accent: var(--teal-900);
+  position: relative;
+  padding: 32px;
+  border-radius: 34px;
+  background: var(--card);
+  box-shadow: 14px 14px 32px rgba(150, 136, 112, 0.32), -12px -12px 28px rgba(255, 255, 255, 0.9);
+  transition: box-shadow 0.4s;
+}
+
+.vault.is-granted {
+  --vault-accent: var(--teal-400);
+  box-shadow: 0 0 0 3px var(--teal-400), 0 0 60px rgba(79, 184, 180, 0.45);
+}
+
+.vault.is-denied,
+.vault.is-locked {
+  --vault-accent: var(--danger);
+  box-shadow: 0 0 0 3px var(--danger), 0 0 50px rgba(180, 82, 60, 0.35);
+}
+
+.vault.is-denied {
+  animation: pv-shake 0.6s ease both;
+}
+
+.vault-bracket {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 0 solid var(--vault-accent);
+  pointer-events: none;
+  animation: pv-bracket 2.4s ease-in-out infinite;
+}
+
+.vault.is-denied .vault-bracket,
+.vault.is-locked .vault-bracket {
+  animation-duration: 0.35s;
+}
+
+.vault-bracket.is-tl { left: -10px; top: -10px; border-left-width: 3px; border-top-width: 3px; border-top-left-radius: 14px; }
+.vault-bracket.is-tr { right: -10px; top: -10px; border-right-width: 3px; border-top-width: 3px; border-top-right-radius: 14px; }
+.vault-bracket.is-bl { left: -10px; bottom: -10px; border-left-width: 3px; border-bottom-width: 3px; border-bottom-left-radius: 14px; }
+.vault-bracket.is-br { right: -10px; bottom: -10px; border-right-width: 3px; border-bottom-width: 3px; border-bottom-right-radius: 14px; }
+
+.vault-sweep {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(79, 184, 180, 0.55);
+  box-shadow: 0 0 16px 4px rgba(79, 184, 180, 0.25);
+  pointer-events: none;
+  animation: pv-sweep 4.5s ease-in-out infinite;
+}
+
+.vault:not(.is-entering) .vault-sweep {
+  display: none;
+}
+
+.vault-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.vault-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.vault-title h2 {
+  margin: 2px 0 0;
+  font-family: var(--serif);
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.vault-lock {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--vault-accent);
+  box-shadow: 6px 6px 14px rgba(16, 96, 111, 0.28);
+  transition: background 0.3s;
+}
+
+.vault-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--vault-accent);
+  animation: pv-ping 2.4s ease-out infinite;
+}
+
+.vault-ping.is-late {
+  animation-delay: 1.2s;
+}
+
+.vault.is-denied .vault-ping,
+.vault.is-locked .vault-ping {
+  animation-duration: 0.8s;
+}
+
+.vault.is-granted .vault-shackle,
+.vault.is-open .vault-shackle {
+  animation: pv-shackle 0.4s ease-out both;
+}
+
+.vault-info {
+  margin: 14px 0 0;
+  max-width: 780px;
+  color: var(--ink-2);
+}
+
+.vault-well {
+  position: relative;
+  margin-top: 24px;
+  padding: 24px 12px 16px;
+  border-radius: 26px;
+  background: var(--well);
+  box-shadow: inset 5px 5px 12px rgba(150, 136, 112, 0.28), inset -5px -5px 12px rgba(255, 255, 255, 0.9);
+  overflow-x: auto;
+}
+
+.vault-scan {
+  display: none;
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--teal-400);
+  box-shadow: 0 0 18px 6px rgba(79, 184, 180, 0.45);
+  pointer-events: none;
+  animation: pv-scan 1s ease-in-out infinite alternate;
+}
+
+.vault.is-verifying .vault-scan {
+  display: block;
+}
+
+.vault-chain {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: max-content;
+}
+
+.vslot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 86px;
+}
+
+.vslot-cube {
+  position: relative;
+}
+
+.vslot svg {
+  width: 68px;
+  height: 74px;
+  overflow: visible;
+}
+
+.vslot polygon {
+  fill: rgba(250, 246, 240, 0.6);
+  stroke: var(--teal-200);
+  stroke-width: 2.4;
+  stroke-dasharray: 7 6;
+  stroke-linejoin: round;
+  transition: fill 0.25s, stroke 0.25s;
+}
+
+.vslot .lines {
+  display: none;
+  stroke: var(--teal-900);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+
+.vslot.is-filled polygon { stroke: var(--teal-900); stroke-width: 2; stroke-dasharray: none; }
+.vslot.is-filled .f-top { fill: var(--cream); }
+.vslot.is-filled .f-left { fill: var(--teal-200); }
+.vslot.is-filled .f-right { fill: var(--teal-400); }
+.vslot.is-filled .lines { display: block; }
+.vslot.is-filled svg { filter: drop-shadow(4px 8px 10px rgba(150, 136, 112, 0.35)); }
+
+.vslot.is-new {
+  animation: pv-pop 0.45s cubic-bezier(.2, .9, .3, 1.3) both;
+}
+
+.vslot.is-new svg {
+  animation: pv-flash 0.8s ease-out both;
+}
+
+.vslot.is-verified svg {
+  animation: pv-verify 0.6s ease-out both;
+}
+
+.vslot.is-denied polygon { stroke: var(--danger); }
+.vslot.is-denied .f-top { fill: var(--danger-50); }
+.vslot.is-denied .f-left { fill: #F0A592; }
+.vslot.is-denied .f-right { fill: var(--danger); }
+
+.vslot.is-falling {
+  animation: pv-fall 1.4s cubic-bezier(.5, 0, .8, .4) both;
+  animation-delay: calc(0.45s + var(--i, 0) * 0.06s);
+}
+
+.vslot.is-gone {
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.vslot-key {
+  position: absolute;
+  right: -6px;
+  top: -4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: none;
+  place-items: center;
+  background: var(--teal-900);
+  box-shadow: 0 0 0 3px var(--well);
+}
+
+.vslot.is-filled .vslot-key { display: grid; }
+.vslot.is-verified .vslot-key { background: var(--night); }
+.vslot.is-verified .vslot-key svg { stroke: var(--teal-400); animation: pv-key 0.4s ease-out both; }
+.vslot.is-denied .vslot-key { background: var(--danger); }
+
+.vslot-key svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: var(--cream);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.vslot .num {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.vslot .mark {
+  font-family: var(--mono);
+  font-size: 18px;
+  line-height: 1;
+  color: var(--teal-200);
+}
+
+.vslot.is-filled .mark { color: var(--teal-900); }
+.vslot.is-denied .mark { color: var(--danger); }
+
+.vslot .hash {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.vlink {
+  margin-top: 31px;
+  flex-shrink: 0;
+}
+
+.vlink path {
+  stroke: var(--sage);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 2 6;
+}
+
+.vlink.is-on path {
+  stroke: var(--teal-400);
+  stroke-dasharray: 5 5;
+  animation: lp-dash 1.2s linear infinite;
+}
+
+.vault.is-denied .vlink path {
+  stroke: var(--danger);
+  animation: none;
+}
+
+.vault-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 22px;
+  align-items: stretch;
+}
+
+.vault-entry {
+  flex: 1 1 420px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vault-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+#passcode {
+  width: 100%;
+  min-width: 0;
+  min-height: 62px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--well);
+  box-shadow: inset 4px 4px 10px rgba(150, 136, 112, 0.28), inset -4px -4px 10px rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 26px;
+  letter-spacing: 0.5em;
+  outline: none;
+}
+
+#passcode:focus-visible {
+  box-shadow: inset 4px 4px 10px rgba(150, 136, 112, 0.28), inset -4px -4px 10px rgba(255, 255, 255, 0.9), 0 0 0 3px var(--teal-400);
+}
+
+.vault.is-denied #passcode,
+.vault.is-locked #passcode {
+  box-shadow: inset 4px 4px 10px rgba(150, 136, 112, 0.28), 0 0 0 2px var(--danger);
+}
+
+.vault-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.vault-progress div {
+  width: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--teal-400);
+  transition: width 0.3s ease, background 0.3s;
+}
+
+.vault.is-denied .vault-progress div,
+.vault.is-locked .vault-progress div {
+  background: var(--danger);
+}
+
+.vault-status {
+  margin: 0;
+  min-height: 22px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.vault-status.is-error { color: var(--danger); }
+.vault-status.is-ok { color: var(--teal-900); }
+
+.vault-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.vault-unlock-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.vault-unlock-wrap .open-halo {
+  display: none;
+}
+
+.vault.is-ready .vault-unlock-wrap .open-halo {
+  display: block;
+}
+
+.btn-unlock {
+  min-height: 56px;
+  padding: 0 28px;
+  font-size: 16px;
+}
+
+.btn-unlock:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+  background: #E9E2D6;
+  color: var(--muted);
+  box-shadow: inset 3px 3px 8px rgba(150, 136, 112, 0.25), inset -3px -3px 8px rgba(255, 255, 255, 0.85);
+}
+
+.vault-log-box {
+  flex: 1 1 300px;
+  min-height: 150px;
+  padding: 16px 18px;
+  border-radius: 22px;
+}
+
+.vault-log-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal-200);
+}
+
+.vault-log-head .live-dot {
+  background: var(--teal-400);
+  box-shadow: 0 0 0 4px rgba(79, 184, 180, 0.2);
+}
+
+#vault-log {
+  font-size: 13px;
+  gap: 4px;
+}
+
+#vault-log > div {
+  animation: pv-line 0.25s ease-out both;
+}
+
+#vault-log .muted-line {
+  color: #7FA9A3;
+}
+
+#vault-log .cursor {
+  display: inline-block;
+  width: 9px;
+  height: 16px;
+  background: var(--teal-400);
+  vertical-align: middle;
+  animation: pv-blink 1s steps(1) infinite;
+}
+
+.landing.is-granted .lp-fade {
+  animation: lp-out 0.6s cubic-bezier(.4, 0, .2, 1) both;
+}
+
+/* Success: the eight sealed blocks burst across the screen. */
+.vault-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  display: none;
+}
+
+.vault-fx.is-on {
+  display: block;
+}
+
+.fx-ring,
+.fx-iris {
+  position: fixed;
+  border-radius: 50%;
+}
+
+.fx-ring {
+  width: 140px;
+  height: 140px;
+  border: 3px solid var(--teal-400);
+  animation: lp-ripple 1.3s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.fx-flyer {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: pv-burst 1.1s cubic-bezier(.15, .85, .25, 1) both;
+}
+
+.fx-flyer svg {
+  width: 120px;
+  height: 132px;
+  overflow: visible;
+  filter: drop-shadow(0 0 22px rgba(79, 184, 180, 0.7));
+}
+
+.fx-flyer span {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--teal-900);
+}
+
+.fx-spark {
+  position: fixed;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(16, 96, 111, 0.2);
+  animation: pv-spark 1.6s cubic-bezier(.15, .85, .25, 1) both;
+}
+
+.fx-title {
+  position: fixed;
+  left: 50%;
+  top: 22vh;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.fx-title b {
+  display: block;
+  font-family: var(--sans);
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 800;
+  color: var(--teal-900);
+  text-transform: uppercase;
+  animation: pv-granted 1s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.fx-title span {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--ink-2);
+  animation: lp-in 0.6s ease 0.5s both;
+}
+
+.fx-iris {
+  width: 48px;
+  height: 48px;
+  background: var(--teal-900);
+  box-shadow: 0 0 60px 20px rgba(79, 184, 180, 0.45);
+  animation: lp-iris 1.1s cubic-bezier(.7, 0, .25, 1) both;
+}
+
+/* Failure: red alarm over the whole screen with a glitching alert. */
+.vault-alarm {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.vault-alarm-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(180, 82, 60, 0.16);
+  animation: pv-alarm 1.4s ease-in-out both;
+}
+
+.vault-alarm-lines {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(0deg, rgba(180, 82, 60, 0.10) 0 2px, transparent 2px 12px);
+  animation: pv-scanlines 0.4s linear infinite;
+}
+
+.vault-alarm-box {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(560px, calc(100% - 48px));
+  padding: 26px 30px;
+  border-radius: 30px;
+  background: var(--danger);
+  color: var(--cream);
+  text-align: center;
+  box-shadow: 0 0 0 6px rgba(180, 82, 60, 0.18), 0 24px 60px rgba(122, 46, 30, 0.45);
+  animation: pv-glitch 0.6s ease-out both;
+}
+
+.vault-alarm-title {
+  margin-top: 8px;
+  font-family: var(--serif);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.05;
+  text-shadow: 2px 0 0 rgba(79, 184, 180, 0.6), -2px 0 0 rgba(122, 46, 30, 0.8);
+}
+
+.vault-alarm-box p {
+  margin: 8px 0 0;
+  font-size: 16px;
+  color: #FBE7E1;
+}
+
+.vault-alarm-chip {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(250, 246, 240, 0.18);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@keyframes pv-pop { 0% { transform: scale(0.4) translateY(14px); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes pv-flash { 0% { filter: none; } 40% { filter: drop-shadow(0 0 18px #4FB8B4) brightness(1.08); } 100% { filter: drop-shadow(4px 8px 10px rgba(150, 136, 112, 0.35)); } }
+@keyframes pv-verify { 0% { filter: none; } 50% { filter: drop-shadow(0 0 18px #4FB8B4) brightness(1.1); } 100% { filter: drop-shadow(0 0 10px rgba(79, 184, 180, 0.7)); } }
+@keyframes pv-key { to { transform: rotate(90deg); } }
+@keyframes pv-shake { 0%, 100% { transform: translateX(0); } 15% { transform: translateX(-14px) rotate(-0.6deg); } 30% { transform: translateX(12px) rotate(0.6deg); } 45% { transform: translateX(-10px); } 60% { transform: translateX(8px); } 75% { transform: translateX(-4px); } }
+@keyframes pv-fall { 0% { transform: none; opacity: 1; } 25% { transform: translateY(-10px) rotate(var(--r, 10deg)); opacity: 1; } 100% { transform: translateY(160px) rotate(calc(var(--r, 10deg) * 4)); opacity: 0; } }
+@keyframes pv-scan { 0% { left: 2%; } 100% { left: 98%; } }
+@keyframes pv-sweep { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+@keyframes pv-line { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@keyframes pv-blink { 50% { opacity: 0; } }
+@keyframes pv-shackle { to { transform: translateY(-7px); } }
+@keyframes pv-ping { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.4); opacity: 0; } }
+@keyframes pv-bracket { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 1; transform: scale(1.04); } }
+@keyframes pv-burst { 0% { transform: translate(-50%, -50%) scale(0.35) rotate(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(1.35) rotate(var(--rot)); opacity: 1; } }
+@keyframes pv-spark { 0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(1); opacity: 0; } }
+@keyframes pv-granted { 0% { opacity: 0; letter-spacing: 0.6em; filter: blur(8px); } 60% { opacity: 1; filter: none; } 100% { opacity: 1; letter-spacing: 0.18em; } }
+@keyframes pv-alarm { 0%, 100% { opacity: 0; } 20%, 60% { opacity: 1; } 40%, 80% { opacity: 0.35; } }
+@keyframes pv-scanlines { to { background-position: 0 24px; } }
+@keyframes pv-glitch { 0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0; } 12% { transform: translate(calc(-50% - 6px), -50%) scale(1.04); opacity: 1; } 24% { transform: translate(calc(-50% + 5px), -50%); } 36% { transform: translate(-50%, -50%) skewX(-4deg); } 48% { transform: translate(-50%, -50%) skewX(0); } 100% { transform: translate(-50%, -50%); opacity: 1; } }
+
+/* Phones: the eight blocks wrap into two rows of four, and the burst shrinks to fit. */
+@media (max-width: 720px) {
+  .vault {
+    padding: 22px 18px;
+    border-radius: 28px;
+  }
+
+  .vault-chain {
+    flex-wrap: wrap;
+    min-width: 0;
+    row-gap: 12px;
+  }
+
+  .vault-chain .vlink {
+    display: none;
+  }
+
+  .vslot {
+    width: 25%;
+  }
+
+  .vslot-cube > svg {
+    width: 50px;
+    height: 55px;
+  }
+
+  #passcode {
+    min-height: 54px;
+    font-size: 20px;
+    letter-spacing: 0.35em;
+  }
+
+  .fx-flyer svg {
+    width: 64px;
+    height: 70px;
+  }
+
+  .fx-flyer span {
+    font-size: 18px;
+  }
+
+  .fx-title {
+    white-space: normal;
+    width: 90vw;
+  }
+
+  .fx-title span {
+    font-size: 12px;
   }
 }
