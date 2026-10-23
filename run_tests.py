@@ -1,7 +1,4 @@
-"""
-Unified Test Runner for Blockchain-Lite Ledger & Digital Wallet.
-Loads and executes all available phase test suites deterministically.
-"""
+
 
 from __future__ import annotations
 
@@ -24,6 +21,7 @@ TEST_MODULES = [
     "tests.test_phase12_serialization_properties",
     "tests.test_phase13_spv_and_keys",
     "tests.test_terminal_console",
+    "tests.test_web_bridge",
 ]
 
 

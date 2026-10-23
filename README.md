@@ -45,6 +45,8 @@ Standard-library-only compliance is enforced by an AST import audit (`TestExclus
 | `tests/` (12 modules) | Verification Suite | Worklet tests, end-to-end lifecycle, attack scenarios (D1–D8), serialization property/mutation tests, fast-hash equivalence, SPV, terminal console checks |
 | `tools/bundle.py` | Monolithic Bundler | Generates the standalone `blockchain_lite_complete.py` |
 
+**Start here:** [`docs/Project_Guide.md`](docs/Project_Guide.md) explains the whole project in plain language; [`docs/Frontend_Guide.md`](docs/Frontend_Guide.md) explains every page and button of the browser app.
+
 Further documentation: [`docs/Protocol_and_Architecture_Specification.md`](docs/Protocol_and_Architecture_Specification.md) (wire formats and consensus rules), [`docs/HLD_and_Interfaces.md`](docs/HLD_and_Interfaces.md) (design and benchmarks), [`docs/RPC_Reference.md`](docs/RPC_Reference.md), [`docs/Viva_Guide_and_Design_Journal.md`](docs/Viva_Guide_and_Design_Journal.md), [`SECURITY.md`](SECURITY.md), [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
@@ -67,6 +69,36 @@ python3 run_terminal.py --status
 # 5. Run the full automated test suite:
 python3 run_tests.py
 ```
+
+### 3.1 Web Explorer & Live Visualization (`web/`, `viz/`)
+
+A browser frontend (plain HTML/CSS/JS) on top of a standard-library HTTP bridge. Both live outside the `blockchain_lite` package, so the package stays standard-library only.
+
+```bash
+# Start the bridge and open http://127.0.0.1:8080
+python3 -m web.bridge
+
+# Optional: also render a Manim video of every newly mined block (pip install manim)
+python3 -m web.bridge --render
+
+# Render one block from a running bridge by hand
+python3 -m viz.render --block 10
+
+# Difficulty retargeting (on by default): target 10 s per block, checked every 4 blocks
+python3 -m web.bridge --block-time 10 --retarget-interval 4 --auto-mine
+python3 -m web.bridge --retarget-interval 0     # fixed difficulty, as before
+```
+
+Difficulty follows the consensus rule in `ledger/consensus.py`: every `retarget_interval` blocks, if the recent blocks came faster than 0.75× the target it rises by one bit (twice the expected work), slower than 1.33× it drops by one bit. **Auto-mine** keeps a background miner running, so you can watch the difficulty climb until blocks take about the target time.
+
+| Page | What it shows |
+| :--- | :--- |
+| **Explorer** | Chain strip linked by `previous_hash`, block inspector with the 88-byte header, Merkle tree with SPV proof paths, send-coins form, mempool, live SSE events |
+| **Block Forge** | Five animated steps replayed from a real block: collect transactions → SHA-256 + avalanche → Merkle tree → nonce search → append to chain |
+| **Tamper Lab** | Every person keeps a ledger copy; edit one copy, see the broken Merkle root and orphaned blocks, then watch the periodic network check restore it from the valid majority |
+| **People** | Add a person (new RSA wallet + ledger copy), make transactions by hand, and press **Add block to blockchain** |
+
+The bridge (`web/bridge.py`) reuses `LedgerServerDispatcher` for reads and transaction submission, streams `tx_submitted` / `block_mined` / `render_ready` over `/events`, binds to loopback by default, and uses the bit-identical hashlib SHA-256 for responsiveness (`--bit-level-hash` switches to the from-scratch engine). Like the terminal console, it holds the demo wallets and signs for them — a classroom convenience, not a real wallet design.
 
 ## 4. Standalone Monolithic Distribution (`blockchain_lite_complete.py`)
 

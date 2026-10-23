@@ -51,3 +51,6 @@ venv.bak/
 # Operating System Files
 .DS_Store
 Thumbs.db
+
+# Manim renders produced by viz/render.py
+web/static/renders/
