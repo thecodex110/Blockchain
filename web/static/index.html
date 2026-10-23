@@ -8,15 +8,163 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
+  <script>
+    // Show the landing page before first paint when no app page is in the URL.
+    if (!location.hash || location.hash === '#welcome') document.documentElement.classList.add('is-landing');
+  </script>
 </head>
 
 <body>
 
+  <!-- ================================================================ LANDING -->
+  <div class="landing" id="landing">
+    <div class="landing-deco" aria-hidden="true">
+      <span class="landing-orbit"></span>
+      <span class="landing-orbit is-dashed"></span>
+    </div>
+    <div class="landing-inner">
+      <header class="landing-top lp-fade">
+        <a class="brand" href="#welcome">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4FB8B4" stroke-width="2">
+              <rect x="2" y="8" width="8" height="8" rx="2" />
+              <rect x="14" y="8" width="8" height="8" rx="2" />
+              <path d="M10 12h4" />
+            </svg>
+          </span>
+          <span class="brand-name">Blockchain-Lite</span>
+        </a>
+        <nav class="pill-track" aria-label="Welcome page">
+          <a href="#landing-inside" data-scroll>What’s inside</a>
+          <a href="#landing-scratch" data-scroll>From scratch</a>
+          <a class="is-active" href="https://github.com/thecodex110/Blockchain" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+      </header>
+
+      <section class="landing-hero" aria-labelledby="landing-h">
+        <div class="lp-fade">
+          <span class="landing-badge"><span class="live-dot" aria-hidden="true"></span>COEP Technological University · CSE Mini Project</span>
+          <h1 id="landing-h" class="landing-title">
+            <span class="landing-kicker">Welcome to the</span>
+            <em>Blockchain</em> Visualization Project
+          </h1>
+          <p class="landing-sub">Watch blocks get built, hashed, mined and chained together — live, from a blockchain
+            written from scratch in Python.</p>
+        </div>
+
+        <div class="landing-actions">
+          <div class="open-wrap">
+            <span class="open-halo" aria-hidden="true"></span>
+            <span class="open-halo is-late" aria-hidden="true"></span>
+            <button class="btn btn-primary btn-open" type="button" id="open-btn">
+              Open
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+              </svg>
+            </button>
+            <span class="open-ripple" aria-hidden="true"></span>
+            <span class="open-ripple is-2" aria-hidden="true"></span>
+            <span class="open-ripple is-3" aria-hidden="true"></span>
+            <span class="open-iris" aria-hidden="true"></span>
+          </div>
+          <a class="btn btn-soft btn-tall lp-fade" href="#landing-inside" data-scroll>See what’s inside</a>
+        </div>
+        <p class="landing-hint lp-fade">opens the live Explorer</p>
+
+        <div class="landing-chain-scroll" aria-label="The last blocks of the chain">
+          <div class="landing-chain" id="landing-chain"></div>
+        </div>
+        <div class="landing-capsule lp-fade" id="landing-capsule" role="status">
+          <span class="live-dot" aria-hidden="true"></span>Connecting to the chain…
+        </div>
+        <p class="landing-note lp-fade">Each block carries the hash of the one before it. The zeros in front are the
+          proof-of-work — more zeros, more work.</p>
+      </section>
+
+      <section class="landing-section lp-fade" id="landing-inside" aria-labelledby="landing-inside-h">
+        <div class="landing-section-head">
+          <div>
+            <div class="eyebrow">What’s inside</div>
+            <h2 id="landing-inside-h">Four ways to see the chain</h2>
+          </div>
+          <p class="muted">Every screen runs on the real ledger: real hashes, real nonces, real signatures.</p>
+        </div>
+        <div class="landing-features">
+          <a class="card landing-feature" href="#explorer">
+            <span class="landing-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+              </svg></span>
+            <h3>Explorer</h3>
+            <p>The live chain block by block, difficulty retargeting, Merkle proofs and every event as it happens.</p>
+          </a>
+          <a class="card landing-feature" href="#forge">
+            <span class="landing-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2 3 7l9 5 9-5-9-5z" />
+                <path d="m3 12 9 5 9-5" />
+                <path d="m3 17 9 5 9-5" />
+              </svg></span>
+            <h3>Block Forge</h3>
+            <p>Replay how one block is made: collect, hash, Merkle tree, nonce search, append.</p>
+          </a>
+          <a class="card landing-feature" href="#tamper">
+            <span class="landing-icon is-danger" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3 2 21h20L12 3z" />
+                <path d="M12 10v5M12 18v.5" />
+              </svg></span>
+            <h3>Tamper Lab</h3>
+            <p>Everyone keeps a ledger copy. Change one, and watch the network catch it and restore it.</p>
+          </a>
+          <a class="card landing-feature" href="#people">
+            <span class="landing-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="8" r="3.5" />
+                <path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5" />
+                <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.6.8 2.6 2.5 3 5.2" />
+              </svg></span>
+            <h3>People</h3>
+            <p>Add a person, send signed coins by hand and press one button to add the block.</p>
+          </a>
+        </div>
+      </section>
+
+      <section class="landing-section lp-fade" id="landing-scratch" aria-labelledby="landing-scratch-h">
+        <div class="capsule landing-scratch">
+          <div class="landing-scratch-text">
+            <div class="eyebrow" style="color:var(--teal-200)">Built from first principles</div>
+            <h2 id="landing-scratch-h">No crypto libraries. No blockchain SDK.</h2>
+            <p>SHA-256 is computed bit by bit, RSA keys come from Miller–Rabin primes, and every block is checked from
+              Genesis to tip.</p>
+          </div>
+          <div class="landing-stats">
+            <div><b>122</b><span>automated tests</span></div>
+            <div><b>0</b><span>third-party packages in the core</span></div>
+            <div><b id="landing-copies">–</b><span>ledger copies kept in sync</span></div>
+            <div><b id="landing-diff" class="is-accent">–</b><span>difficulty bits, self-adjusting</span></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="landing-footer lp-fade">
+        <span>Blockchain-Lite · educational project, not for real money</span>
+        <span>COEP Technological University · Department of CSE</span>
+      </footer>
+    </div>
+  </div>
+  <div class="reveal-veil" id="reveal-veil" aria-hidden="true"></div>
+
   <header class="topbar">
-    <a class="brand" href="#explorer">
+    <a class="brand" href="#welcome" title="Back to the welcome page">
       <span class="brand-mark" aria-hidden="true">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4FB8B4" stroke-width="2">
           <rect x="2" y="8" width="8" height="8" rx="2" />

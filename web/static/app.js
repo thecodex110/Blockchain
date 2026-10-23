@@ -99,7 +99,16 @@
   // ------------------------------------------------------------------ routing
 
   const VIEWS = ['explorer', 'forge', 'tamper', 'people'];
+  const isLandingRoute = () => location.hash === '' || location.hash === '#' || location.hash === '#welcome';
+
   function route() {
+    const landing = isLandingRoute();
+    document.documentElement.classList.toggle('is-landing', landing);
+    if (landing) {
+      renderLanding();
+      window.scrollTo({ top: 0 });
+      return;
+    }
     const view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'explorer';
     document.querySelectorAll('[data-view-panel]').forEach((p) => p.classList.toggle('hidden', p.dataset.viewPanel !== view));
     document.querySelectorAll('[data-view]').forEach((a) => {
@@ -164,6 +173,7 @@
     renderSelectors();
     renderNetwork();
     renderPeoplePage();
+    renderLanding();
   }
 
   /** The next block as a square of 16 slots: coinbase first, then one per pending transfer. */
@@ -1082,6 +1092,89 @@
     await api.post('/api/autominer', { on: false });
     refresh();
   });
+
+  // ------------------------------------------------------------------ landing page (#welcome)
+
+  function cubeSvg() {
+    const s = svg('svg', { width: 104, height: 114, viewBox: '0 0 120 132', 'aria-hidden': 'true' });
+    const face = (points, fill) => svg('polygon', { points, fill, stroke: '#10606F', 'stroke-width': 1.6, 'stroke-linejoin': 'round' });
+    s.append(
+      face('60,6 112,34 60,62 8,34', '#FAF6F0'),
+      face('8,34 60,62 60,126 8,98', '#E2F4F0'),
+      face('112,34 60,62 60,126 112,98', '#98D8D0'),
+      svg('path', { d: 'M22 58v26M34 64v26M46 70v26', stroke: '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+      svg('path', { d: 'M74 70l26-14M74 82l26-14M74 94l16-9', stroke: '#10606F', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.45 }));
+    return s;
+  }
+
+  function renderLanding() {
+    if (!S.state || !document.documentElement.classList.contains('is-landing')) return;
+    const { chain, blocks, consensus, network } = S.state;
+    const last = blocks.slice(-5);
+    const items = [];
+    last.forEach((b, i) => {
+      if (i > 0) {
+        const link = svg('svg', { class: 'lp-link', width: 64, height: 20, viewBox: '0 0 64 20', 'aria-hidden': 'true' });
+        link.append(
+          svg('path', { d: 'M6 10h52', stroke: '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+          svg('circle', { cx: 6, cy: 10, r: 5, fill: '#98D8D0' }),
+          svg('circle', { cx: 58, cy: 10, r: 5, fill: '#10606F' }));
+        items.push(link);
+      }
+      const zeros = b.hash.match(/^0*/)[0];
+      const cube = el('div', { class: 'lp-cube', style: { animationDelay: `${i * 0.45}s` } },
+        cubeSvg(),
+        el('span', { class: 'num', text: b.index === 0 ? 'Genesis' : `#${b.index}` }),
+        el('span', { class: 'hash' }, el('b', { text: zeros }), `${b.hash.slice(zeros.length, 12)}…`));
+      cube.style.setProperty('--i', String(i)); // staggers the flash when the page opens
+      items.push(cube);
+    });
+    $('landing-chain').replaceChildren(...items);
+
+    const peers = (network && network.peers) || [];
+    const inSync = peers.filter((p) => p.status === 'ok').length;
+    const sep = () => el('span', { class: 'sep', 'aria-hidden': 'true', text: '·' });
+    $('landing-capsule').replaceChildren(
+      el('span', { class: 'live-dot', 'aria-hidden': 'true' }),
+      'Live chain', sep(),
+      el('span', {}, el('span', { class: 'mono', text: fmt(chain.height) }), ' blocks'), sep(),
+      el('span', {}, el('span', { class: 'mono', text: consensus.difficulty }), ' bits difficulty'), sep(),
+      el('span', {}, el('span', { class: 'mono', text: `${inSync}/${peers.length}` }), ' ledger copies in sync'));
+    $('landing-copies').textContent = peers.length;
+    $('landing-diff').textContent = `${blocks[0].difficulty} → ${consensus.difficulty}`;
+  }
+
+  const OPEN_MS = 1850;
+  let opening = false;
+
+  function openApp() {
+    if (opening) return;
+    opening = true;
+    const landing = $('landing');
+    $('open-btn').disabled = true;
+    landing.classList.add('is-opening');
+    setTimeout(() => {
+      location.hash = '#explorer';
+      landing.classList.remove('is-opening');
+      $('open-btn').disabled = false;
+      opening = false;
+      if (reducedMotion) return;
+      const veil = $('reveal-veil');
+      const revealed = [document.querySelector('.topbar'), $('view-explorer')];
+      veil.classList.add('is-on');
+      revealed.forEach((n) => n.classList.add('is-revealing'));
+      setTimeout(() => veil.classList.remove('is-on'), 750);
+      setTimeout(() => revealed.forEach((n) => n.classList.remove('is-revealing')), 1300);
+    }, reducedMotion ? 0 : OPEN_MS);
+  }
+
+  $('open-btn').addEventListener('click', openApp);
+  document.querySelectorAll('[data-scroll]').forEach((a) => a.addEventListener('click', (ev) => {
+    // In-page anchors on the landing page scroll instead of changing the route.
+    ev.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+  }));
 
   // ------------------------------------------------------------------ boot
 
