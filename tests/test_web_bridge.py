@@ -15,6 +15,7 @@ from typing import Any, Dict, Optional
 
 from blockchain_lite.interfaces import ValidationError
 from web.bridge import build_state, make_server
+from web.gate import LOCKOUT_SECONDS, MAX_ATTEMPTS, PasscodeGate
 
 
 class TestWebBridge(unittest.TestCase):
@@ -145,6 +146,18 @@ class TestWebBridge(unittest.TestCase):
                 buf += sock.recv(1024)
         self.assertIn(b'"probe": 1', buf)
 
+    def test_unlock_checks_the_passcode(self) -> None:
+        status, payload = self._req("/api/unlock", {"passcode": "87654321"})
+        self.assertEqual(status, 200, payload)
+        self.assertFalse(payload["result"]["granted"])
+        self.assertEqual(payload["result"]["attempts_left"], MAX_ATTEMPTS - 1)
+        status, payload = self._req("/api/unlock", {"passcode": "12345678"})
+        self.assertTrue(payload["result"]["granted"])
+        for bad in ["1234", "abcdefgh", 12345678, None]:
+            status, payload = self._req("/api/unlock", {"passcode": bad})
+            self.assertEqual(status, 400, bad)
+            self.assertFalse(payload["ok"])
+
 
 class TestLedgerCopies(unittest.TestCase):
     """Everyone holds a ledger copy; the network check repairs tampered copies from the majority."""
@@ -254,6 +267,38 @@ class TestBridgeRetargeting(unittest.TestCase):
             state.mine(with_trace=False)
         self.assertEqual({b.difficulty for b in state.ledger.blocks}, {4})
         self.assertFalse(state.consensus()["retargeting"])
+
+
+
+class TestPasscodeGate(unittest.TestCase):
+    def setUp(self) -> None:
+        self.now = 100.0
+        self.gate = PasscodeGate("24681357", clock=lambda: self.now)
+
+    def test_right_code_resets_the_failure_count(self) -> None:
+        self.assertEqual(self.gate.check("00000000")["attempts_left"], MAX_ATTEMPTS - 1)
+        self.assertTrue(self.gate.check("24681357")["granted"])
+        self.assertEqual(self.gate.check("00000000")["attempts_left"], MAX_ATTEMPTS - 1)
+
+    def test_too_many_wrong_codes_lock_the_gate(self) -> None:
+        for _ in range(MAX_ATTEMPTS - 1):
+            self.gate.check("00000000")
+        result = self.gate.check("00000000")
+        self.assertEqual(result["locked_for"], LOCKOUT_SECONDS)
+        # Even the right code is refused while locked.
+        self.now += 10
+        locked = self.gate.check("24681357")
+        self.assertFalse(locked["granted"])
+        self.assertAlmostEqual(locked["locked_for"], LOCKOUT_SECONDS - 10)
+        self.now += LOCKOUT_SECONDS
+        self.assertTrue(self.gate.check("24681357")["granted"])
+
+    def test_passcode_must_be_eight_digits(self) -> None:
+        for bad in ["1234567", "123456789", "1234abcd", ""]:
+            with self.assertRaises(ValidationError):
+                PasscodeGate(bad)
+        self.assertFalse(self.gate.is_default)
+        self.assertTrue(PasscodeGate().is_default)
 
 
 if __name__ == "__main__":

@@ -37,9 +37,69 @@ Useful variations:
 | `python3 -m web.bridge --block-time 5` | Target 5 seconds per block instead of 10 |
 | `python3 -m web.bridge --bit-level-hash` | Use the from-scratch SHA-256 (much slower, settles at a lower difficulty) |
 | `python3 -m web.bridge --audit-interval 10` | Check everyone's ledger copy every 10 seconds instead of 20 |
+| `python3 -m web.bridge --passcode 24681357` | Set the welcome-page passcode (8 digits; the demo default is `12345678`) |
 | `python3 -m web.bridge --render` | Also render a Manim video of every new block (needs Manim) |
 
-The app has four pages. Switch with the pill menu at the top; the address bar shows `#explorer`, `#forge`, `#tamper` or `#people`, so you can bookmark a page.
+The app opens on a **welcome page** (§1.1) with a passcode vault (§1.2). Behind it are four pages; switch with the pill menu at the top. The address bar shows `#explorer`, `#forge`, `#tamper` or `#people`, so you can bookmark a page. Once this browser tab is unlocked, opening one of those addresses skips the welcome page; before that, it shows the vault and opens that page after the right passcode.
+
+### 1.1 Welcome page
+
+Shown at `http://127.0.0.1:8080` (or `#welcome`), in the same cream-and-teal look as the app.
+
+| Element | What it shows / does |
+| :--- | :--- |
+| **Welcome to the *Blockchain* Visualization Project** | The title, with a one-line description underneath |
+| **Passcode vault** | The front door of the app: type the 8-digit passcode to get in (§1.2) |
+| **See what’s inside** / **What’s inside**, **From scratch** | Scroll down to the matching section of the welcome page |
+| **GitHub** | Opens the project repository in a new tab |
+| **Floating blocks** | The real last five blocks of the chain, joined by moving links. The bold leading zeros of each hash are its proof-of-work |
+| **Black capsule** | Live numbers: height, current difficulty, and how many ledger copies are in sync |
+| **Four cards** | Explorer, Block Forge, Tamper Lab, People — click one to jump straight to that page |
+| **Built from first principles** | 126 tests, no third-party packages in the core, the number of ledger copies, and the difficulty range so far |
+
+Click the **Blockchain-Lite** logo in the app to come back to the welcome page.
+
+### 1.2 The passcode vault
+
+The vault card sits under the title. The passcode is **8 digits**, typed on the keyboard (there is no on-screen keypad). The demo default is **`12345678`**; the server prints it at startup and `--passcode` changes it.
+
+| Element | What it shows / does |
+| :--- | :--- |
+| **Eight dashed blocks** | One per digit. Each digit you type seals the next block: it fills teal, gets a key badge, and shows a short hash. Each block's hash is SHA-256 of the previous block's hash plus the digit, so the passcode becomes a small hash chain. The digit itself is shown only as • |
+| **Links between blocks** | Light up when both neighbours are sealed |
+| **Passcode box, progress bar, status line** | The box takes digits only; the bar and the line count sealed blocks ("4 of 8 blocks sealed · 4 to go") |
+| **Unlock the chain** | Sends the passcode. It also goes by itself about half a second after the 8th digit, or press Enter |
+| **Node handshake** (black terminal) | The check, step by step: sealing, chaining, the key fingerprint (first 16 hex characters of the last hash), the handshake with the bridge, then *match* or *MISMATCH* |
+| **Brackets, sweep, lock** | Security motion around the card; a scan line runs across the blocks while the bridge checks the code |
+
+**Right passcode:** the blocks are verified one by one, the card glows teal, and the eight blocks burst out across the whole page with rings and flying hash fragments under **Access granted**. A teal circle then closes over the screen and the Explorer (or the page you linked to) opens.
+
+**Wrong passcode:** a red alarm covers the page — **Incorrect passcode**, "Make the passcode right and try again", and how many attempts are left. The blocks turn red and fall, and after about 2½ seconds the vault resets for another try.
+
+**Five wrong passcodes in a row** lock the bridge for 30 seconds: the alarm reads **Node locked**, the passcode box is disabled, and a countdown shows when you can try again. During the lock even the right passcode is refused.
+
+**Already unlocked:** the unlock lasts for this browser tab (session storage). Coming back to the welcome page then shows **The vault is open** with all eight blocks sealed, plus **Open the Explorer** (plays the burst and opens the app) and **Lock again** (forgets the unlock).
+
+With the operating system's *reduce motion* setting on, the burst is skipped and the app opens straight away.
+
+*How safe is it?* The bridge checks the code (as a SHA-256 digest, compared in constant time) and counts attempts, but the vault only decides what the browser shows: the JSON API behind it stays open on loopback. It is a classroom front door, not real access control.
+
+### 1.3 Live animations in the app
+
+The app pages carry the same blockchain motion as the welcome page. All of it follows real events.
+
+| Where | What moves | What it means |
+| :--- | :--- | :--- |
+| **Left margin** (wide screens) | *Live chain*: the newest blocks as floating cubes (as many as fit the window height), newest on top, joined by flowing links | When a block is mined it drops onto the top and flashes teal |
+| **Right margin** (wide screens) | *Next block*: a dashed ghost cube, breathing faster while mining; a dashed stream runs up the whole margin and chips ride it into the block | Dark chips are real pending transfers; light chips are fragments of recent block hashes |
+| **Background** | Two faint orbit rings, one slowly turning | Decoration only |
+| **Every page** | Cards rise in one after another when you open the page; bars and gauges grow in | — |
+| **Chain strip** | Data flows along the links between blocks; the newest block breathes a teal ring | The `previous_hash` links |
+| **Next block square** | The coinbase slot glows softly; while mining a scan line sweeps across the slots | The nonce search |
+| **Chain height, Total supply** | The numbers count up to their new value | A block was added |
+| **Small stat cards** | Lift slightly under the mouse | — |
+
+The margin rails appear when the window is at least 1560 px wide (there is no spare room beside the content below that). With *reduce motion* on, the movement is turned off.
 
 ---
 
@@ -47,7 +107,7 @@ The app has four pages. Switch with the pill menu at the top; the address bar sh
 
 | Element | What it shows / does |
 | :--- | :--- |
-| **Blockchain-Lite** logo | Goes back to Explorer |
+| **Blockchain-Lite** logo | Goes back to the welcome page |
 | **Explorer · Block Forge · Tamper Lab · People** | Page switcher. The raised pill is the page you are on |
 | **Live pill** (black, right) | Connection to the bridge's live event stream. Pulsing teal dot + `Live · 127.0.0.1:8080` = connected. `Reconnecting…` = the stream dropped and the browser is retrying. `Bridge unreachable: …` = the server is not running |
 
@@ -57,16 +117,17 @@ The app has four pages. Switch with the pill menu at the top; the address bar sh
 
 The home page: the state of the chain, sending coins, and inspecting blocks.
 
-### 3.1 Next block ring (top left)
+### 3.1 Next block card (top left)
 
 | Element | Meaning |
 | :--- | :--- |
-| **Ring** | Fills as transactions wait in the mempool: one fifth for the coinbase, one more fifth per pending transfer (full at 4). It is a visual cue only; you can mine at any fill |
-| **#N** | The height the next block will have |
-| **"x tx waiting"** | Number of transfers in the mempool |
-| Note under the ring | "x pending transfers + coinbase of 50 + fees" |
-| **Mine & watch** | Mines the mempool into a new block right now, then jumps to **Block Forge** and plays its five steps automatically. While mining, the ring spins and the button is disabled. At high difficulty this can take several seconds |
+| **#N** and status chip | The height the next block will have, and *Waiting for transfers*, *Ready to mine*, *Mining…* or *Auto-mining* |
+| **Square of 16 slots** | The next block. The dark **CB** slot is the coinbase; each teal slot is a transfer waiting in the mempool (more than 15 shows `+N` in the last slot). The slots pulse while mining |
+| **Transactions · Miner earns · Difficulty · Expected work** | `1 coinbase + N`, `50 + fees`, the difficulty the next block needs (`23 → 24 bits` when it changes), and about `2^D` hashes |
+| **Mine & watch** | Mines the mempool into a new block right now, then jumps to **Block Forge** and plays its five steps automatically. At high difficulty this can take several seconds |
 | **Auto-mine** | Starts a background miner that keeps producing blocks, like a real network's hash power. The button turns black and reads **Auto-mining… stop**; press it again to stop (the current block finishes first). Use it to watch difficulty adjust (§3.3) |
+| **Last block** | The newest block: its number, how long ago it was mined, hashes tried, transaction count and block time |
+| **How a block is built** | The five steps in one line each, with a link to watch them in Block Forge |
 
 ### 3.2 Chain height, Total supply, Tip hash
 
@@ -87,7 +148,7 @@ This card shows retargeting at work.
 | **next block pill** | Difficulty the next block must use. `= 18`: unchanged. Dark teal `↑ 19`: going up. Sand `↓ 17`: going down |
 | **Chip (top right)** | `retarget in N blocks` — difficulty can only change every 4 blocks. `retargets on the next block` — this block is the checkpoint. `fixed difficulty` — retargeting is off |
 | **Rule text** | Target time, the two thresholds, and the average time of the last 4 blocks |
-| **Pace bar** | A scale from 0 to 2× the target. Left zone **too fast → +1** (under 7.5 s), middle **on target**, right zone **too slow → −1** (over 13.3 s). The black marker is where the last 4 blocks' average sits |
+| **Pace bar** | A scale from 0 to 2× the target. Left zone **too fast → +1** (under 7.5 s), middle **on target**, right zone **too slow → −1** (over 13.3 s). The black pointer under the bar is where the last 4 blocks' average sits |
 
 How to read it: if the marker is in the left zone when a retarget comes, difficulty goes up one bit; in the right zone, down one bit; in the middle, it stays.
 
@@ -111,6 +172,8 @@ Click a bar to open that block in the inspector (§3.8). Expect randomness: a bl
 | **✓ 100% valid** | Chain validation result (`broken` if invalid) |
 | **tx 0/10 mempool** | Pending transactions (the ring fills toward 10) |
 | **D 4 bits difficulty** | Current difficulty out of the maximum (24) |
+| **net 21/21 copies** | Ledger copies in sync (red when one is tampered) |
+| **s 4.3s avg block** | Average time of the last 4 blocks, on a scale of 0 to twice the target |
 | **Round button** | Reloads everything from the bridge. Normally not needed; the page updates itself from live events |
 
 ### 3.6 The chain strip
@@ -143,11 +206,13 @@ A horizontal row of block cards joined by teal links, newest on the right. It sc
 | **Sign & send from Alice** | The bridge picks the sender's UTXOs, adds change, signs with RSA, and submits the signed bytes through the same `submit_transaction` the TCP server uses |
 | **Status box** | After a send: `Sent 8 to Bob · spent 1 UTXO · 1 change · tx ca1fb2ab`. On a problem it turns red with the reason, e.g. not enough funds, or an output already spent by a pending transaction |
 
-The transaction then appears in **Mempool** and in **Live events**, and the next-block ring fills a step.
+The transaction then appears in **Mempool** and in **Live events**, and one more slot of the next-block square fills.
 
-### 3.8 Mempool
+### 3.8 Mempool and Wallets
 
-Pending transactions: short `tx_id`, sender → recipient, amount. Empty shows "Quiet. Every transaction is already in a block." The list empties when a block is mined.
+**Mempool:** pending transactions: short `tx_id`, sender → recipient, amount. Empty shows "Quiet. Every transaction is already in a block." The list empties when a block is mined.
+
+**Wallets:** every wallet's balance as a bar, richest first (the Miner's bar is dark teal). The header shows the number of wallets and the coins they hold together. Click a wallet to make it the sender in **Send coins**. The list scrolls inside its card and stretches to fill the column, so the left and right columns end level.
 
 ### 3.9 Block inspector
 
@@ -162,7 +227,7 @@ Shows whichever block you selected (the newest by default).
 | **Nonce** | Winning nonce and how many hashes it took |
 | **Time** | When it was mined, seconds after the previous block, and its difficulty |
 | **Merkle tree** | Root on top (dark), leaves at the bottom, 8-character prefixes. Hover a node for the full hash. Scrolls sideways when wide |
-| **Transactions** | Every transaction in the block: short `tx_id`, coinbase or sender → recipient, amount |
+| **Transactions** | Every transaction in the block: short `tx_id`, coinbase or sender → recipient, amount. The count is shown on the right; long lists scroll inside the card |
 
 **Click a transaction** to see its Merkle proof:
 
@@ -338,13 +403,16 @@ The status box shows the new address and *20 coins pending — add a block to de
 
 | Element | What it does |
 | :--- | :--- |
+| **Steps strip** | The five steps of a transfer: pick coins → sign with RSA → wait in Pending → add the block → every copy updates |
 | **Pending** list | Transactions waiting for the next block |
 | **Add block to blockchain** | Mines every pending transaction into the next block at the current difficulty, then sends the block to every person's ledger copy. The note shows the block number, transaction count, nonce and hashes tried; a notification confirms it. With nothing pending it still adds a block containing only the Miner's reward |
 | Auto-mine warning | If Auto-mine is on, blocks are also being added automatically. **Turn it off** stops it so you control every block |
 
 ### 5A.4 Everyone
 
-A card per person: initial, name · balance, the start of their address, and whether their ledger copy is in sync or tampered. A newly added person is highlighted. Click a card to use that person as the sender.
+A card per person: initial, name, balance chip, the start of their address, and a dot showing whether their ledger copy is *in sync* (teal) or *tampered* (red). The current sender has a teal ring; a newly added person is highlighted. Click a card to use that person as the sender.
+
+**Find a person** filters the cards by name. The list fills the height of the column next to it and scrolls inside the card, so adding more people never stretches the page.
 
 ---
 
@@ -369,13 +437,14 @@ Events come from the server, so if two browser tabs are open, both see every eve
 
 ## 7. A 10-minute demo script
 
-1. **Explorer.** Point at the chain strip: each card's *prev* equals the hash on its left. Click block #5 and show its header bar and Merkle tree.
-2. **Send coins.** Choose Alice → Bob, 8 coins, fee 1, then **Sign & send**. Show the status line (UTXO spent, change) and the transaction in Mempool and Live events.
-3. **Merkle proof.** In the inspector, click a transaction and show the teal path and the 4 sibling hashes: "a phone wallet only needs these, not the whole block".
-4. **Mine & watch.** Let Block Forge play all five steps. Pause on **Hash** for the avalanche grid and on **Proof-of-Work** for the failed tries and the FOUND row.
-5. **Difficulty.** Back on Explorer, press **Auto-mine**. Watch the Difficulty card: blocks arrive far faster than 7.5 s, so every 4 blocks the difficulty rises a bit, `retarget` lines appear, and the effort bars grow. After a minute or so blocks take about 10 s. Press **Auto-mining… stop**.
-6. **Tamper Lab.** Pick a person (say Grace), an older block and a transaction, and press **Tamper**. Show the red card with the ⚠ badge, the broken chain row and the log. Then press **Check now** (or wait for the countdown): the notification says the tamper was fixed and Grace's card shows *↺ restored*.
-7. **People.** Add a person named Ravi with 20 coins, press **Add block to blockchain**, then send 5 from Ravi to Bob by hand and add another block.
+1. **Passcode vault.** On the welcome page type a wrong 8-digit code first: watch a block seal for every digit, then the red alarm and the falling blocks. Then type `12345678` and let the blocks burst across the page into the Explorer.
+2. **Explorer.** Point at the chain strip: each card's *prev* equals the hash on its left. Click block #5 and show its header bar and Merkle tree.
+3. **Send coins.** Choose Alice → Bob, 8 coins, fee 1, then **Sign & send**. Show the status line (UTXO spent, change) and the transaction in Mempool and Live events.
+4. **Merkle proof.** In the inspector, click a transaction and show the teal path and the 4 sibling hashes: "a phone wallet only needs these, not the whole block".
+5. **Mine & watch.** Let Block Forge play all five steps. Pause on **Hash** for the avalanche grid and on **Proof-of-Work** for the failed tries and the FOUND row.
+6. **Difficulty.** Back on Explorer, press **Auto-mine**. Watch the Difficulty card: blocks arrive far faster than 7.5 s, so every 4 blocks the difficulty rises a bit, `retarget` lines appear, and the effort bars grow. After a minute or so blocks take about 10 s. Press **Auto-mining… stop**.
+7. **Tamper Lab.** Pick a person (say Grace), an older block and a transaction, and press **Tamper**. Show the red card with the ⚠ badge, the broken chain row and the log. Then press **Check now** (or wait for the countdown): the notification says the tamper was fixed and Grace's card shows *↺ restored*.
+8. **People.** Add a person named Ravi with 20 coins, press **Add block to blockchain**, then send 5 from Ravi to Bob by hand and add another block.
 
 ---
 
@@ -383,6 +452,7 @@ Events come from the server, so if two browser tabs are open, both see every eve
 
 | You press | Browser calls | Bridge does | Core code |
 | :--- | :--- | :--- | :--- |
+| Passcode (8th digit, Enter, Unlock the chain) | `POST /api/unlock` | `PasscodeGate.check` (`web/gate.py`) | — |
 | (page load, refresh button) | `GET /api/state` | `BridgeState.state()` | `get_chain_info` RPC, `ledger.blocks`, `ledger.mempool`, `get_balance` |
 | Block card / effort bar | `GET /api/block?index=N` | `block_detail` | `Block.compute_merkle_tree` |
 | Transaction in inspector | `GET /api/proof?block=N&tx=I` | `merkle_proof` | `get_merkle_proof` RPC, `MerkleTree.verify_proof` |
@@ -416,3 +486,5 @@ Front-end files: `web/static/index.html` (layout), `web/static/app.css` (look an
 | Supply keeps rising while Auto-mine runs | Expected: every block, even an empty one, pays the Miner 50 coins |
 | A new person cannot send | Their starting coins arrive only in the next block: press **Add block to blockchain** first |
 | A tampered copy is not repaired | Repair happens at the next network check (see the countdown), or press **Check now** |
+| The passcode is refused | The demo default is `12345678` unless the bridge was started with `--passcode`; the server log prints the default at startup. After five wrong tries wait for the 30-second lock to clear |
+| A bookmarked page shows the welcome page | The unlock lasts for one browser tab. Enter the passcode once; the bookmarked page opens after it |
