@@ -150,8 +150,8 @@ class TestRSAKeySizeGuidance(unittest.TestCase):
         self.assertEqual(ledger.get_balance(recipient.address), 40 + 50 + 1)
         self.assertTrue(ledger.validate_full_chain(force=True).is_valid)
 
-    def test_dashboard_demo_accepts_rsa_bits(self) -> None:
-        from blockchain_lite.network.web_dashboard import create_demo_ledger_and_wallets
+    def test_demo_wallets_accept_rsa_bits(self) -> None:
+        from blockchain_lite.wallet.demo_wallets import create_demo_ledger_and_wallets
         _, wallets = create_demo_ledger_and_wallets(rsa_bits=512)
         self.assertTrue(all(w.public_key.bit_length == 512 for w in wallets.values()))
 

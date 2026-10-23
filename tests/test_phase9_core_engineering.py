@@ -230,7 +230,7 @@ class TestLatentQualityFixes(unittest.TestCase):
 
     def test_type_hints_resolve_in_ledger_modules(self) -> None:
         for mod_name in ("ledger.validator", "ledger.merkle", "ledger.chain", "ledger.consensus",
-                         "ledger.persistence", "ledger.utxo", "ledger.pow", "network.web_dashboard",
+                         "ledger.persistence", "ledger.utxo", "ledger.pow",
                          "network.server", "network.client", "benchmarks.pow_benchmark"):
             mod = importlib.import_module(f"blockchain_lite.{mod_name}")
             for _, obj in inspect.getmembers(mod):

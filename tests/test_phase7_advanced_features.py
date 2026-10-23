@@ -26,10 +26,6 @@ from blockchain_lite.ledger.chain import BlockchainLedger
 from blockchain_lite.ledger.validator import FullChainValidator
 from blockchain_lite.network.client import TCPSocketTransport
 from blockchain_lite.network.server import TCPSocketLedgerServer
-from blockchain_lite.network.web_dashboard import (
-    WebDashboardServer,
-    create_demo_ledger_and_wallets,
-)
 from blockchain_lite.wallet.wallet import Wallet
 
 
@@ -181,97 +177,7 @@ class TestValidatorCheckpointing(unittest.TestCase):
         self.assertIn("Checkpoint mismatch at Block #1", str(cm.exception))
 
 
-class TestWebDashboardEndpoints(unittest.TestCase):
-    """Verify WebDashboardServer HTTP REST API and UI delivery."""
 
-    def test_dashboard_server_endpoints(self) -> None:
-        ledger, wallets = create_demo_ledger_and_wallets()
-        server = WebDashboardServer(ledger=ledger, named_wallets=wallets, host="127.0.0.1", port=0)
-        server.start()
-        self.addCleanup(server.stop)
-
-        base_url = server.url
-
-        # 1. GET /
-        with urllib.request.urlopen(f"{base_url}/") as resp:
-            self.assertEqual(resp.status, 200)
-            content = resp.read().decode("utf-8")
-            self.assertIn("Blockchain-Lite Ledger", content)
-            self.assertIn("<!DOCTYPE html>", content)
-
-        # 2. GET /api/chain
-        with urllib.request.urlopen(f"{base_url}/api/chain") as resp:
-            self.assertEqual(resp.status, 200)
-            data = json.loads(resp.read().decode("utf-8"))
-            self.assertGreaterEqual(data["height"], 2)
-            self.assertTrue(data["is_valid"])
-
-        # 3. GET /api/blocks
-        with urllib.request.urlopen(f"{base_url}/api/blocks") as resp:
-            self.assertEqual(resp.status, 200)
-            blocks = json.loads(resp.read().decode("utf-8"))
-            self.assertGreaterEqual(len(blocks), 2)
-            self.assertEqual(blocks[0]["index"], 0)
-
-        # 4. GET /api/wallets
-        with urllib.request.urlopen(f"{base_url}/api/wallets") as resp:
-            self.assertEqual(resp.status, 200)
-            wallet_list = json.loads(resp.read().decode("utf-8"))
-            self.assertEqual(len(wallet_list), 4)
-
-        # 5. POST /api/transfer
-        bob = wallets["Bob"]
-        transfer_payload = json.dumps({
-            "sender_name": "Alice",
-            "recipient_address": bob.address.hex(),
-            "amount": 5,
-            "fee": 1,
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            f"{base_url}/api/transfer",
-            data=transfer_payload,
-            headers={"Content-Type": "application/json", "X-API-Token": server.api_token},
-        )
-        with urllib.request.urlopen(req) as resp:
-            self.assertEqual(resp.status, 200)
-            res_data = json.loads(resp.read().decode("utf-8"))
-            self.assertTrue(res_data["ok"])
-
-        # 6. POST /api/mine
-        mine_payload = json.dumps({
-            "miner_address": wallets["Miner"].address.hex()
-        }).encode("utf-8")
-        req_mine = urllib.request.Request(
-            f"{base_url}/api/mine",
-            data=mine_payload,
-            headers={"Content-Type": "application/json", "X-API-Token": server.api_token},
-        )
-        try:
-            with urllib.request.urlopen(req_mine) as resp:
-                self.assertEqual(resp.status, 200)
-                mine_data = json.loads(resp.read().decode("utf-8"))
-                self.assertTrue(mine_data["ok"])
-                self.assertIn("block", mine_data)
-        except urllib.error.HTTPError as err:
-            err_body = err.read().decode("utf-8")
-            self.fail(f"Mining API failed with status {err.code}: {err_body}")
-
-        # 7. POST /api/tamper (target signed transfer at tx_index=1)
-        tamper_payload = json.dumps({
-            "block_index": 1,
-            "tx_index": 1,
-        }).encode("utf-8")
-        req_tamper = urllib.request.Request(
-            f"{base_url}/api/tamper",
-            data=tamper_payload,
-            headers={"Content-Type": "application/json", "X-API-Token": server.api_token},
-        )
-        with urllib.request.urlopen(req_tamper) as resp:
-            self.assertEqual(resp.status, 200)
-            tamper_data = json.loads(resp.read().decode("utf-8"))
-            self.assertTrue(tamper_data["ok"])
-            self.assertFalse(tamper_data["report"]["signature_valid_after_tamper"])
-            self.assertFalse(tamper_data["report"]["merkle_root_matches_header"])
 
 
 class TestRSASecurityInspection(unittest.TestCase):

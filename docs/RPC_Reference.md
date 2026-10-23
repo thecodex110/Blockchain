@@ -1,7 +1,6 @@
-# RPC & HTTP API Reference
+# RPC API Reference
 
-Source of truth: `LedgerServerDispatcher._dispatch` in `blockchain_lite/network/server.py` and
-`WebDashboardHandler` in `blockchain_lite/network/web_dashboard.py`.
+Source of truth: `LedgerServerDispatcher._dispatch` in `blockchain_lite/network/server.py`.
 
 ## 1. TCP JSON-RPC (`TCPSocketLedgerServer`)
 
@@ -29,20 +28,3 @@ Source of truth: `LedgerServerDispatcher._dispatch` in `blockchain_lite/network/
 **Private keys:** no method accepts, needs, or returns one. As an extra tripwire, any param whose name
 contains `private_key` is rejected with `SecurityViolationError`.
 
-## 2. Dashboard HTTP API (`WebDashboardServer`, demo only)
-
-| Route | Auth | Body / query | Result |
-| :--- | :--- | :--- | :--- |
-| `GET /` | none | | The single-page UI (embeds the per-run API token). |
-| `GET /api/chain` | none | `?full=1` forces re-validation | Same fields as `get_chain_info` (no `genesis_hash_hex`). |
-| `GET /api/blocks` | none | | All blocks with transactions. |
-| `GET /api/wallets` | none | | Demo wallets: `name`, `address`, `balance`. |
-| `GET /api/merkle_proof` | none | `?block=<i>&tx_id=<hex>` | `{ok, proof: {tx_id, merkle_root, path[{direction, sibling_hash}], is_valid}}`; `is_valid` is checked against the block header's root. |
-| `POST /api/transfer` | token | `{sender_name, recipient_address, amount, fee}` | `{ok, tx_id}`; the server signs with the named demo wallet's key. |
-| `POST /api/mine` | token | `{miner_address}` | `{ok, block{index, block_hash_hex}, stats{...}}` |
-| `POST /api/tamper` | token | `{block_index, tx_index}` | Read-only 1-byte tamper simulation report. |
-
-**POST requirements:** header `X-API-Token: <token printed at startup>` (else 401) and
-`Content-Type: application/json` (else 415). `Content-Length` must be a non-negative integer
-(else 400) and at most 64 KiB (else 413). Unexpected server errors return a generic 500; details
-are logged server-side only. No `Access-Control-Allow-Origin` header is sent.
