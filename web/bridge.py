@@ -55,6 +55,7 @@ from blockchain_lite.models.transaction import Transaction  # noqa: E402
 from blockchain_lite.network.server import LedgerServerDispatcher  # noqa: E402
 from blockchain_lite.wallet.demo_wallets import create_demo_ledger_and_wallets  # noqa: E402
 from blockchain_lite.wallet.wallet import Wallet  # noqa: E402
+from web.gate import DEFAULT_PASSCODE, PasscodeGate  # noqa: E402
 from web.network import LedgerNetwork  # noqa: E402
 
 logger = logging.getLogger("blockchain_lite.web")
@@ -121,8 +122,10 @@ class BridgeState:
         on_block_mined: Optional[Callable[[Dict[str, Any]], None]] = None,
         rsa_bits: int = 384,
         audit_interval: float = 20.0,
+        passcode: str = DEFAULT_PASSCODE,
     ) -> None:
         self.ledger = ledger
+        self.gate = PasscodeGate(passcode)
         self.wallets = wallets
         self.hasher = hasher
         self.rsa_bits = rsa_bits
@@ -582,6 +585,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 result = self.state.mine()
             elif url.path == "/api/tamper":
                 result = self.state.tamper(body)
+            elif url.path == "/api/unlock":
+                result = self.state.gate.check(body.get("passcode"))
             elif url.path == "/api/people":
                 result = self.state.add_person(body)
             elif url.path == "/api/network/tamper":
@@ -644,6 +649,7 @@ def build_state(
     retarget_interval: int = 4,
     max_difficulty: int = 24,
     audit_interval: float = 20.0,
+    passcode: str = DEFAULT_PASSCODE,
 ) -> BridgeState:
     """Create the demo ledger (10 pre-mined blocks, 20 wallets + Miner) behind a bridge.
 
@@ -668,7 +674,7 @@ def build_state(
         max_difficulty=max_difficulty,
     )
     return BridgeState(ledger, wallets, hasher, on_block_mined=on_block_mined,
-                       rsa_bits=rsa_bits, audit_interval=audit_interval)
+                       rsa_bits=rsa_bits, audit_interval=audit_interval, passcode=passcode)
 
 
 class BridgeServer(ThreadingHTTPServer):
@@ -714,6 +720,8 @@ def main(argv: Optional[List[str]] = None) -> None:
     parser.add_argument("--auto-mine", action="store_true", help="start the background miner right away")
     parser.add_argument("--audit-interval", type=float, default=20.0,
                         help="seconds between network checks of everyone's ledger copy (default 20)")
+    parser.add_argument("--passcode", default=DEFAULT_PASSCODE,
+                        help="8-digit passcode for the welcome page (default %(default)s)")
     parser.add_argument("--render", action="store_true", help="render Manim videos after each mined block")
     parser.add_argument("--render-quality", default="l", choices=["l", "m", "h"])
     args = parser.parse_args(argv)
@@ -749,8 +757,11 @@ def main(argv: Optional[List[str]] = None) -> None:
         retarget_interval=args.retarget_interval,
         max_difficulty=args.max_difficulty,
         audit_interval=args.audit_interval,
+        passcode=args.passcode,
     )
     state_holder["s"] = state
+    if state.gate.is_default:
+        logger.info("Welcome-page passcode: %s (demo default; change it with --passcode)", DEFAULT_PASSCODE)
     state.network.start()
     logger.info("Ready in %.1fs: %d blocks", time.perf_counter() - t0, state.ledger.height)
 
