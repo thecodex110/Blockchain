@@ -381,12 +381,13 @@ web/bridge.py  ── BridgeState ──► LedgerServerDispatcher ──► Blo
 | `POST /api/network/audit` | Run the network check now |
 | `POST /api/people` `{name, fund}` | Add a person: new RSA wallet, own ledger copy, optional coins from the Miner |
 | `POST /api/autominer` `{on}` | Start or stop the background miner |
+| `POST /api/unlock` `{passcode}` | Check the welcome-page passcode: `{granted, attempts_left, locked_for}`. Not 8 digits → 400 |
 | `GET /api/renders` | List of rendered Manim videos |
 | `GET /events` | Live events: `tx_submitted`, `block_mined`, `difficulty_changed`, `autominer`, `copy_tampered`, `network_audit`, `ledger_repaired`, `person_joined`, `render_ready` |
 
 **Startup:** the bridge builds the demo chain (about 1 second with the fast hash), binds to `127.0.0.1:8080`, and serves `web/static/`.
 
-**Flags:** `--port`, `--host`, `--bit-level-hash` (use the from-scratch SHA-256), `--rsa-bits`, `--block-time` (default 10), `--retarget-interval` (default 4; 0 = fixed difficulty), `--max-difficulty` (default 24), `--auto-mine`, `--audit-interval` (seconds between network checks, default 20), `--render`, `--render-quality`.
+**Flags:** `--port`, `--host`, `--bit-level-hash` (use the from-scratch SHA-256), `--rsa-bits`, `--block-time` (default 10), `--retarget-interval` (default 4; 0 = fixed difficulty), `--max-difficulty` (default 24), `--auto-mine`, `--audit-interval` (seconds between network checks, default 20), `--passcode` (8-digit welcome-page passcode, default `12345678`), `--render`, `--render-quality`.
 
 ### 9.1 Everyone keeps a copy: tampering and repair
 
@@ -403,6 +404,8 @@ The core package is a single node. To show what a network of many ledger copies 
 - **Adding a person** creates a new RSA wallet, gives them the majority copy, and (optionally) sends them coins from the Miner as a normal transaction that lands in the next block.
 
 This simulation runs inside one process; there is still no real peer-to-peer networking (§13).
+
+**Passcode gate** (`web/gate.py`): the welcome page asks for an 8-digit passcode before showing the app. Every digit becomes a block in a small SHA-256 chain on the page (the picture); the bridge itself compares a SHA-256 digest of the code in constant time (`hmac.compare_digest`) and locks for 30 seconds after five wrong codes in a row. The unlock is remembered per browser tab. It gates the *pages*, not the API (§13).
 
 **Safety:** loopback by default; static files cannot escape `web/static/`; request bodies are capped at 64 KB; bad input returns a JSON error with status 400. **Demo custody:** like the terminal console, the bridge holds the demo wallets' private keys and signs for them. That is convenient for a classroom and is *not* how a real wallet should work — in `network/client.py` the wallet signs on the client side.
 
@@ -462,7 +465,7 @@ The **demo chain** used by the terminal and the web app: Genesis gives 20 named 
 
 ## 12. Tests
 
-`python3 run_tests.py` runs 122 tests across 14 modules (one is skipped):
+`python3 run_tests.py` runs 126 tests across 14 modules (one is skipped):
 
 | Module | Covers |
 | :--- | :--- |
@@ -479,7 +482,7 @@ The **demo chain** used by the terminal and the web app: Genesis gives 20 named 
 | `test_phase13_spv_and_keys` | SPV header-chain verification, RSA key-size guidance |
 | `test_attack_scenarios` | Each known attack (D1–D8) replayed and shown to fail |
 | `test_terminal_console` | Every terminal menu action works |
-| `test_web_bridge` | Web API, live events, static files, auto-miner, difficulty going up and down, ledger copies (tamper → network check → repair), adding people |
+| `test_web_bridge` | Web API, live events, static files, auto-miner, difficulty going up and down, ledger copies (tamper → network check → repair), adding people, the passcode gate (right, wrong, lockout, malformed) |
 
 ---
 
@@ -488,6 +491,7 @@ The **demo chain** used by the terminal and the web app: Genesis gives 20 named 
 - **Educational cryptography.** 384/512-bit RSA and a custom, non-constant-time signature scheme. Real systems use ≥ 2048-bit RSA or elliptic curves with vetted libraries.
 - **One node.** There is no real peer-to-peer network or competing miners. The web app simulates everyone's ledger copy and a majority check inside one process (§9.1); fork resolution is implemented and tested in the core.
 - **Demo custody in the web app and terminal.** The demo wallets' private keys live in the same process as the ledger.
+- **The passcode is a front door, not access control.** It decides whether the browser shows the app; the JSON API stays open to anyone who can reach the bridge (loopback by default). The demo default `12345678` is printed at startup.
 - **Retargeting is gentle.** One bit per interval means climbing from 4 to 22 bits takes about 70 blocks. Bitcoin instead adjusts proportionally (up to 4× per period).
 - **Python speed.** The from-scratch SHA-256 manages roughly a thousand hashes per second; the fast backend about 250k–600k. Real mining hardware does trillions.
 - **Manim renders are untested** on this machine (Manim is not installed).
