@@ -42,7 +42,7 @@ Standard-library-only compliance is enforced by an AST import audit (`TestExclus
 | `blockchain_lite/network/client.py` | Integration (Client) | `WalletClient`: signs locally, never sends private keys; anchored SPV (`fetch_verified_headers`) |
 | `blockchain_lite/cli/terminal.py` | Terminal Explorer | Interactive terminal console & explorer: blocks, mempool, wallet balances, RSA transfers, PoW mining, SPV Merkle proofs, tamper simulation |
 | `blockchain_lite/cli/demo.py` | Integration & Viva | Self-contained 6-stage demonstration runner (`--rsa-bits` selectable) |
-| `tests/` (12 modules) | Verification Suite | Worklet tests, end-to-end lifecycle, attack scenarios (D1–D8), serialization property/mutation tests, fast-hash equivalence, SPV, terminal console checks |
+| `tests/` (14 modules, 126 tests) | Verification Suite | Worklet tests, end-to-end lifecycle, attack scenarios (D1–D8), serialization property/mutation tests, fast-hash equivalence, SPV, terminal console checks, web bridge |
 | `tools/bundle.py` | Monolithic Bundler | Generates the standalone `blockchain_lite_complete.py` |
 
 **Start here:** [`docs/Project_Guide.md`](docs/Project_Guide.md) explains the whole project in plain language; [`docs/Frontend_Guide.md`](docs/Frontend_Guide.md) explains every page and button of the browser app.
