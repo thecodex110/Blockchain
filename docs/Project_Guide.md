@@ -6,7 +6,7 @@ For button-by-button help with the browser app, see [`Frontend_Guide.md`](Fronte
 
 ---
 
-## Contents YES ME :
+## Contents
 
 1. [What this project is](#1-what-this-project-is)
 2. [The big picture](#2-the-big-picture)
@@ -496,7 +496,7 @@ The **demo chain** used by the terminal and the web app: Genesis gives 20 named 
 - **Python speed.** The from-scratch SHA-256 manages roughly a thousand hashes per second; the fast backend about 250k–600k. Real mining hardware does trillions.
 - **Manim renders are untested** on this machine (Manim is not installed).
 - **Python version.** The project targets Python 3.11+; this machine has 3.9.6, and the code and tests run there too.
-- `SECURITY.md` currently holds only a placeholder line; the threat model is summarised in [`HLD_and_Interfaces.md`](HLD_and_Interfaces.md) §6 and in this section.
+- The full threat model, with what the design defends against and what it does not, is in [`SECURITY.md`](../SECURITY.md).
 
 ---
 
