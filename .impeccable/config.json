@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "web/static/app.css"
+        ],
+        "createdAt": "2026-11-03T21:27:52.869Z",
+        "reason": "Claude triage: lines 3708-3711 are .vault-bracket corner brackets (two borders each forming an L at the vault's corners, from commit 30ed8f2), not one-sided card accents"
+      }
+    ]
+  }
+}
