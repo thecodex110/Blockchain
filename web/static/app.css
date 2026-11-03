@@ -4354,71 +4354,144 @@ html.is-landing .ambient {
 }
 
 /* ------------------------------------------------------------------ dark theme
-   Palette: midnight #161E2F, navy #242F49, slate #384358, peach #FFA586,
-   crimson #B51A2B, wine #541A2E. Peach takes the teal accent's place; text that
-   sat on teal fills (the --cream token) turns midnight so it stays readable on peach. */
+   Wine velvet: a textured wine ground (#541A2E family), peach #FFA586 as the main
+   accent, crimson #B51A2B for second fills and warnings. Peach takes the teal
+   accent's place; text that sat on teal fills (the --cream token) turns deep wine
+   so it stays readable on peach. */
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --ground: #161E2F;
-  --card: #242F49;
-  --well: #1D2740;
-  --track: #384358;
-  --ink: #F6E8E2;
-  --ink-2: #D5CACF;
-  --muted: #A4ADC1;
+  --ground: #2B0F1A;
+  --card: #2E111C;
+  --well: #240D16;
+  --track: #4E1D2C;
+  --ink: #FBEDE7;
+  --ink-2: #E9D2CD;
+  --muted: #C9A6AC;
   --teal-950: #FFC4AF;
   --teal-900: #FFA586;
   --teal-600: #F38B6D;
-  --teal-400: #F5876A;
-  --teal-200: #C98473;
-  --teal-100: #3D2A3F;
-  --teal-50: #2F3B58;
-  --sage: #2E3A54;
-  --sand: #4A2C36;
-  --cream: #161E2F;
-  --night: #0E1424;
-  --night-2: #2A3550;
+  --teal-400: #E8505F;
+  --teal-200: #E58E7A;
+  --teal-100: #4A1A2A;
+  --teal-50: #45192A;
+  --sage: #3A1824;
+  --sand: #5A2232;
+  --cream: #2B0F1A;
+  --night: #190810;
+  --night-2: #3A1524;
   --danger: #FF6B78;
   --danger-50: #541A2E;
   --danger-200: #8C2A3A;
   --coral: #FF8A8F;
-  --raised: 0 12px 30px rgba(3, 6, 14, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  --raised-sm: 0 6px 16px rgba(3, 6, 14, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  --inset: inset 0 2px 8px rgba(3, 6, 14, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-  --sh: 3, 6, 14;
-  --hl: 52, 63, 88;
+  --raised: 0 12px 30px rgba(8, 2, 5, 0.6), inset 0 1px 0 rgba(255, 165, 134, 0.06);
+  --raised-sm: 0 6px 16px rgba(8, 2, 5, 0.55), inset 0 1px 0 rgba(255, 165, 134, 0.06);
+  --inset: inset 0 2px 8px rgba(8, 2, 5, 0.65), inset 0 0 0 1px rgba(255, 165, 134, 0.05);
+  --sh: 8, 2, 5;
+  --hl: 96, 40, 58;
   --accent-rgb: 255, 165, 134;
   --deep-rgb: 255, 165, 134;
   --night-rgb: 0, 0, 0;
   --danger-rgb: 181, 26, 43;
-  --muted-rgb: 164, 173, 193;
-  --cream-rgb: 22, 30, 47;
-  --track-2: #1B2438;
-  --nav-ink: #C3BAC2;
-  --dim: #8A93A8;
-  --on-sand: #F3D9CE;
-  --on-sage: #DCE3F0;
-  --sand-hi: #E9B9A8;
-  --sage-hi: #9AA6C2;
-  --axis: #384358;
+  --muted-rgb: 201, 166, 172;
+  --cream-rgb: 43, 15, 26;
+  --track-2: #230C15;
+  --nav-ink: #E3C6C4;
+  --dim: #B08A92;
+  --on-sand: #FFE1D6;
+  --on-sage: #F3DCD8;
+  --sand-hi: #FFB9A3;
+  --sage-hi: #D98C95;
+  --axis: #4E1D2C;
   --warm: #B51A2B;
   --amber: #FFD8C9;
-  --amber-line: #E0455A;
-  --amber-50: #541A2E;
-  --on-amber: #FFD3C4;
-  --stage: #1B2438;
-  --bit: #384358;
-  --down-bg: #2B1F33;
-  --scratch-ink: #E9D3CC;
-  --scratch-cell: #1B2438;
-  --vault-dim: #9AA3B8;
-  --on-night: #F6E8E2;
+  --amber-line: #FF8A7A;
+  --amber-50: #B51A2B;
+  --on-amber: #FFF1EC;
+  --stage: #240D16;
+  --bit: #4E1D2C;
+  --down-bg: #3A1220;
+  --scratch-ink: #FFD8CB;
+  --scratch-cell: #240D16;
+  --vault-dim: #C49AA2;
+  --on-night: #FBEDE7;
 }
 
-html[data-theme="dark"] body,
+/* Velvet: fractal-noise grain over wine gradients, with two slow layers on top:
+   drifting crimson/peach light, and a grain that shifts so the cloth seems to catch light. */
+html[data-theme="dark"] body {
+  background-color: #2B0F1A;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.12 0 0 0 0 0.2 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 80% 60% at 15% 0%, rgba(181, 26, 43, 0.28), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 100% 100%, rgba(84, 26, 46, 0.95), transparent 70%),
+    linear-gradient(160deg, #3D1322 0%, #2B0F1A 45%, #1E0A12 100%);
+  background-size: 220px 220px, auto, auto, auto;
+  background-attachment: fixed;
+}
+
 html[data-theme="dark"] .landing {
-  background-image: radial-gradient(rgba(255, 165, 134, 0.07) 1.2px, transparent 1.2px);
+  background: transparent;
+}
+
+html[data-theme="dark"] body::before,
+html[data-theme="dark"] body::after {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+html[data-theme="dark"] body::before {
+  background:
+    radial-gradient(circle at 30% 35%, rgba(181, 26, 43, 0.22), transparent 38%),
+    radial-gradient(circle at 70% 65%, rgba(255, 165, 134, 0.10), transparent 34%),
+    radial-gradient(circle at 55% 20%, rgba(84, 26, 46, 0.55), transparent 40%);
+  animation: velvet-drift 26s ease-in-out infinite alternate;
+}
+
+html[data-theme="dark"] body::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.8 0 0 0 0 0.75 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  animation: velvet-grain 1.2s steps(4) infinite;
+}
+
+@keyframes velvet-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(4%, -3%, 0) scale(1.08); }
+  100% { transform: translate3d(-3%, 4%, 0) scale(1.03); }
+}
+
+@keyframes velvet-grain {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-3%, 2%); }
+  50% { transform: translate(2%, -3%); }
+  75% { transform: translate(-2%, -1%); }
+  100% { transform: translate(0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] body::before,
+  html[data-theme="dark"] body::after {
+    animation: none;
+  }
+}
+
+/* Cards are wine glass on the velvet: a little of the texture shows through. */
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .vault {
+  background-color: rgba(46, 17, 28, 0.82);
+  -webkit-backdrop-filter: blur(6px) saturate(1.2);
+  backdrop-filter: blur(6px) saturate(1.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 165, 134, 0.08), 0 14px 34px rgba(8, 2, 5, 0.55);
+}
+
+/* Section titles and big numbers carry the peach; the crimson underlines headings. */
+html[data-theme="dark"] .card h2,
+html[data-theme="dark"] .forge-head h1,
+html[data-theme="dark"] .lab-head h1 {
+  color: #FFD3C2;
 }
 
 /* Light text on the danger fills, which stay bright in the dark theme. */
@@ -4439,7 +4512,7 @@ html[data-theme="dark"] .toast,
 html[data-theme="dark"] .landing-capsule,
 html[data-theme="dark"] .landing-scratch,
 html[data-theme="dark"] .live {
-  box-shadow: inset 0 0 0 1px #384358, 0 12px 28px rgba(3, 6, 14, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(255, 165, 134, 0.14), 0 12px 28px rgba(8, 2, 5, 0.6);
 }
 
 html[data-theme="dark"] .dock,
