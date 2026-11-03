@@ -237,16 +237,33 @@ button:disabled {
 }
 
 .live-dot {
+  position: relative;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--dim);
 }
 
+/* The pulse is a ring that scales and fades (composited), not an animated box-shadow. */
+.live.is-on .live-dot::after,
+.landing-badge .live-dot::after,
+.rail-title .live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.22);
+  animation: ring-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.9); opacity: 0.25; }
+}
+
 .live.is-on .live-dot {
   background: var(--teal-400);
   box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.25);
-  animation: pulse 2s ease-in-out infinite;
 }
 
 /* ------------------------------------------------------------------ surfaces */
@@ -1922,7 +1939,16 @@ button.list-item[aria-pressed="true"] {
   display: grid;
   place-items: center;
   box-shadow: 0 0 0 3px var(--cream);
-  animation: pulse-danger 1.4s ease-in-out infinite;
+}
+
+.copy .danger::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: rgba(var(--danger-rgb), 0.25);
+  z-index: -1;
+  animation: ring-pulse 1.4s ease-in-out infinite;
 }
 
 .people-grid {
@@ -2072,11 +2098,6 @@ button.list-item[aria-pressed="true"] {
   }
 }
 
-@keyframes pulse-danger {
-  50% {
-    box-shadow: 0 0 0 3px var(--cream), 0 0 0 9px rgba(var(--danger-rgb), 0.25);
-  }
-}
 
 @keyframes toast-in {
   from {
@@ -2145,11 +2166,6 @@ button.list-item[aria-pressed="true"] {
   }
 }
 
-@keyframes pulse {
-  50% {
-    box-shadow: 0 0 0 7px rgba(var(--accent-rgb), 0.08);
-  }
-}
 
 @keyframes spin {
   to {
@@ -2306,7 +2322,6 @@ html.is-landing body {
 
 .landing-badge .live-dot {
   background: var(--teal-400);
-  animation: pulse 2s ease-in-out infinite;
 }
 
 .landing-title {
@@ -3326,7 +3341,6 @@ html.is-landing .ambient {
 
 .rail-title .live-dot {
   background: var(--teal-400);
-  animation: pulse 2s ease-in-out infinite;
 }
 
 .rail-chain {
@@ -3521,7 +3535,19 @@ html.is-landing .ambient {
 }
 
 .slot-cell.is-coinbase {
+  position: relative;
+}
+
+/* Glow drawn once on a pseudo-element; only its opacity animates. */
+.slot-cell.is-coinbase::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 14px 2px rgba(var(--accent-rgb), 0.55);
+  opacity: 0;
   animation: cb-glow 2.8s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .is-mining .block-box::after {
@@ -3565,8 +3591,8 @@ html.is-landing .ambient {
 }
 
 @keyframes cb-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0); }
-  50% { box-shadow: 0 0 14px 2px rgba(var(--accent-rgb), 0.55); }
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 
 @keyframes scan {
@@ -3601,8 +3627,19 @@ html.is-landing .ambient {
   bottom: 0;
   width: 2px;
   margin-left: -1px;
+}
+
+/* The dashes move by transform on a layer one dash taller, instead of animating background-position. */
+.rail-stream::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: -14px;
   background-image: repeating-linear-gradient(to top, rgba(var(--accent-rgb), 0.55) 0 6px, transparent 6px 14px);
   background-size: 2px 14px;
+  will-change: transform;
   animation: stream-up 1.2s linear infinite;
 }
 
@@ -3624,7 +3661,7 @@ html.is-landing .ambient {
 }
 
 @keyframes stream-up {
-  to { background-position: 0 -14px; }
+  to { transform: translateY(-14px); }
 }
 
 /* ------------------------------------------------------------------ passcode vault (welcome page) */
@@ -4418,17 +4455,11 @@ html[data-theme="dark"] {
   --night-cream: #F6ECDC;   /* the light accent of the dark theme */
 }
 
-/* Velvet: fractal-noise grain over wine gradients, with two slow layers on top:
-   drifting crimson/peach light, and a grain that shifts so the cloth seems to catch light. */
+/* Velvet, kept cheap: the texture, dots and wine gradients are one fixed layer that is
+   painted once (no background-attachment: fixed, which repaints on every scroll), and the
+   only motion is a slow transform on a separate glow layer, which the GPU composites. */
 html[data-theme="dark"] body {
-  background-color: #2B0F1A;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.12 0 0 0 0 0.2 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse 80% 60% at 15% 0%, rgba(181, 26, 43, 0.28), transparent 60%),
-    radial-gradient(ellipse 70% 60% at 100% 100%, rgba(84, 26, 46, 0.95), transparent 70%),
-    linear-gradient(160deg, #3D1322 0%, #2B0F1A 45%, #1E0A12 100%);
-  background-size: 220px 220px, auto, auto, auto;
-  background-attachment: fixed;
+  background: #2B0F1A;
 }
 
 html[data-theme="dark"] .landing {
@@ -4439,23 +4470,28 @@ html[data-theme="dark"] body::before,
 html[data-theme="dark"] body::after {
   content: "";
   position: fixed;
-  inset: -20%;
   z-index: -1;
   pointer-events: none;
 }
 
 html[data-theme="dark"] body::before {
-  background:
-    radial-gradient(circle at 30% 35%, rgba(181, 26, 43, 0.22), transparent 38%),
-    radial-gradient(circle at 70% 65%, rgba(255, 165, 134, 0.10), transparent 34%),
-    radial-gradient(circle at 55% 20%, rgba(84, 26, 46, 0.55), transparent 40%);
-  animation: velvet-drift 26s ease-in-out infinite alternate;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(246, 236, 220, 0.24) 1.3px, transparent 1.3px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.12 0 0 0 0 0.2 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 80% 60% at 15% 0%, rgba(181, 26, 43, 0.28), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 100% 100%, rgba(84, 26, 46, 0.95), transparent 70%),
+    linear-gradient(160deg, #3D1322 0%, #2B0F1A 45%, #1E0A12 100%);
+  background-size: 22px 22px, 220px 220px, auto, auto, auto;
 }
 
 html[data-theme="dark"] body::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.8 0 0 0 0 0.75 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-  background-size: 160px 160px;
-  animation: velvet-grain 1.2s steps(4) infinite;
+  inset: -15%;
+  background:
+    radial-gradient(circle at 30% 35%, rgba(181, 26, 43, 0.20), transparent 38%),
+    radial-gradient(circle at 70% 65%, rgba(255, 165, 134, 0.09), transparent 34%);
+  will-change: transform;
+  animation: velvet-drift 30s ease-in-out infinite alternate;
 }
 
 @keyframes velvet-drift {
@@ -4464,27 +4500,17 @@ html[data-theme="dark"] body::after {
   100% { transform: translate3d(-3%, 4%, 0) scale(1.03); }
 }
 
-@keyframes velvet-grain {
-  0% { transform: translate(0, 0); }
-  25% { transform: translate(-3%, 2%); }
-  50% { transform: translate(2%, -3%); }
-  75% { transform: translate(-2%, -1%); }
-  100% { transform: translate(0, 0); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  html[data-theme="dark"] body::before,
   html[data-theme="dark"] body::after {
     animation: none;
   }
 }
 
-/* Cards are wine glass on the velvet: a little of the texture shows through. */
+/* Cards are wine glass on the velvet. No backdrop blur: blurring 20+ cards over a moving
+   background every frame was what made the page lag. */
 html[data-theme="dark"] .card,
 html[data-theme="dark"] .vault {
-  background-color: rgba(46, 17, 28, 0.82);
-  -webkit-backdrop-filter: blur(6px) saturate(1.2);
-  backdrop-filter: blur(6px) saturate(1.2);
+  background-color: rgba(46, 17, 28, 0.9);
   box-shadow: inset 0 0 0 1px rgba(255, 165, 134, 0.08), 0 14px 34px rgba(8, 2, 5, 0.55);
 }
 
