@@ -38,6 +38,7 @@ Useful variations:
 | `python3 -m web.bridge --bit-level-hash` | Use the from-scratch SHA-256 (much slower, settles at a lower difficulty) |
 | `python3 -m web.bridge --audit-interval 10` | Check everyone's ledger copy every 10 seconds instead of 20 |
 | `python3 -m web.bridge --passcode 24681357` | Set the welcome-page passcode (8 digits; the demo default is `12345678`) |
+| `python3 -m web.bridge --demo-traffic 0` | Mine coinbase-only blocks when the mempool is empty, instead of adding demo transfers (§6.1) |
 | `python3 -m web.bridge --render` | Also render a Manim video of every new block (needs Manim) |
 
 The app opens on a **welcome page** (§1.1) with a passcode vault (§1.2). Behind it are four pages; switch with the pill menu at the top. The address bar shows `#explorer`, `#forge`, `#tamper` or `#people`, so you can bookmark a page. Once this browser tab is unlocked, opening one of those addresses skips the welcome page; before that, it shows the vault and opens that page after the right passcode.
@@ -154,16 +155,20 @@ How to read it: if the marker is in the left zone when a retarget comes, difficu
 
 ### 3.4 Mining effort chart
 
-Eight pill-shaped bars, one per recent block.
+One bar per block for the last 12 mined blocks.
 
 | Element | Meaning |
 | :--- | :--- |
 | **Number on top** | Hashes tried to find that block (`nonce + 1`), shortened: `193k`, `4.2M` |
-| **Bar height** | The same number on a **log scale**, so a difficulty-22 block does not dwarf everything else |
-| **#N / DN** | Block number and its difficulty |
+| **Bar height** | The same number on a **log scale**, so a difficulty-22 block does not dwarf everything else. The dashed grid lines on the left (`1, 4, 16, 64, …`) are each 4× the one below |
+| **Amber dashed line on a bar** | That block's expected work, `2^D` for its own difficulty, so the line moves when difficulty changes |
+| **Teal bar** | The block took no more hashes than expected (a lucky block) |
+| **Amber bar** | The block took more than expected |
 | **Dark bar** | The currently selected block |
+| **#N / DN** | Block number and its difficulty |
+| **Chips underneath** | Average hashes per block against the expected average, the luckiest and the hardest block (relative to their own `2^D`), and how much of the expected work the 12 blocks used together (`0.98×`: slightly less than expected) |
 
-Click a bar to open that block in the inspector (§3.8). Expect randomness: a block at difficulty D needs `2^D` tries on average, but any single block can be lucky or unlucky.
+Click a bar to open that block in the inspector (§3.9). Hover a bar for the exact count. Expect randomness: a block at difficulty D needs `2^D` tries on average, but any single block can be lucky or unlucky; over many blocks the total settles near `1×`.
 
 ### 3.5 Black gauge dock (right)
 
@@ -226,14 +231,17 @@ Shows whichever block you selected (the newest by default).
 | **Block hash / Previous / Merkle root** | Full 64-character hex values |
 | **Nonce** | Winning nonce and how many hashes it took |
 | **Time** | When it was mined, seconds after the previous block, and its difficulty |
-| **Merkle tree** | Root on top (dark), leaves at the bottom, 8-character prefixes. Hover a node for the full hash. Scrolls sideways when wide |
-| **Transactions** | Every transaction in the block: short `tx_id`, coinbase or sender → recipient, amount. The count is shown on the right; long lists scroll inside the card |
+| **Merkle tree** | One labelled row per level: **ROOT** on top, **LEVEL n** in between, **LEAVES** at the bottom (a block with one transaction shows a single **LEAF = ROOT** row). Nodes show 8-character prefixes; hover one for the full hash. Scrolls sideways when wide |
+| **Legend** (top right of the tree) | The three colours of a proof: chosen tx, recomputed, proof hash (sent) |
+| **Transactions** | Every transaction in the block: short `tx_id`, coinbase or sender → recipient, amount. The count is shown on the right. The list grows to fill the card and only scrolls past about 12 transactions |
 
-**Click a transaction** to see its Merkle proof:
+**The Merkle proof.** As soon as a block opens, the inspector shows the proof for its first transfer (tx 1, or the coinbase in a one-transaction block). Click any other transaction to see its proof instead:
 
-- **Teal nodes** — the path from that transaction's leaf up to the root.
-- **Outlined nodes** — the siblings: the hashes a light client needs to rebuild the root. With 9 transactions there are 4.
-- The label reads `Proof for tx 2356e26c · 4 hashes · verified ✓`; the bridge checked the proof against the block header.
+- **Dark teal leaf** — the chosen transaction.
+- **Teal-outlined nodes** — the path from that leaf up to the root: the hashes a light client recomputes.
+- **Amber nodes** — the siblings: the hashes the proof actually sends. With 7 transactions there are 3, with 9 there are 4.
+- The line above the tree reads `Proof for tx 1 (4d3eb62c) · 3 hashes · verified ✓`; the bridge checked the proof against the block header.
+- The sentence under the tree says the same in words: how many sibling hashes a light wallet needs to rebuild the root, which it then compares with the root in the 88-byte header it already trusts.
 
 ### 3.10 Live events
 
@@ -250,7 +258,7 @@ An animated replay of how one block was built, step by step, using that block's 
 | Control | What it does |
 | :--- | :--- |
 | **Replay block** | Pick any block (newest first) to replay. Genesis is not listed: it is created, not mined |
-| **Mine a new block** | Same as *Mine & watch*: mine now and play the new block from step 1 |
+| **Mine a new block** | Same as *Mine & watch*: mine now and play the new block from step 1. If nothing is waiting in the mempool, the bridge first adds a few signed demo transfers (§6.1), so the block has a real Merkle tree to replay |
 
 ### 4.2 Step tabs
 
@@ -272,7 +280,7 @@ An animated replay of how one block was built, step by step, using that block's 
 **03 Merkle — growing the tree**
 - Rows from leaves up to the root, appearing level by level (leaves first, root last, with a halo).
 - Chips: the parent rule `H(0x01 ‖ L ‖ R)`, the odd-tail rule, and how many hashes a proof needs.
-- A block with a single transaction shows only the root (its root is the leaf).
+- A block with a single transaction shows one **LEAF = ROOT** node with the chips `leaf = H(0x00 ‖ tx_id)`, `1 transaction → the leaf is the root` and `proof = 0 hashes`. The odd-tail chip appears only when some level really has an odd number of nodes.
 
 **04 Proof-of-Work — searching for the nonce**
 - Header bar: index, previous hash, Merkle root, time, `D=…`, and the **nonce** field ticking up.
@@ -405,7 +413,7 @@ The status box shows the new address and *20 coins pending — add a block to de
 | :--- | :--- |
 | **Steps strip** | The five steps of a transfer: pick coins → sign with RSA → wait in Pending → add the block → every copy updates |
 | **Pending** list | Transactions waiting for the next block |
-| **Add block to blockchain** | Mines every pending transaction into the next block at the current difficulty, then sends the block to every person's ledger copy. The note shows the block number, transaction count, nonce and hashes tried; a notification confirms it. With nothing pending it still adds a block containing only the Miner's reward |
+| **Add block to blockchain** | Mines every pending transaction into the next block at the current difficulty, then sends the block to every person's ledger copy. The note shows the block number, transaction count, nonce and hashes tried; a notification confirms it. With nothing pending, the bridge first adds a few signed demo transfers between demo wallets (§6.1); start it with `--demo-traffic 0` to get a block with only the Miner's reward instead |
 | Auto-mine warning | If Auto-mine is on, blocks are also being added automatically. **Turn it off** stops it so you control every block |
 
 ### 5A.4 Everyone
@@ -433,6 +441,17 @@ A card per person: initial, name, balance chip, the start of their address, and 
 
 Events come from the server, so if two browser tabs are open, both see every event.
 
+### 6.1 Demo transfers in otherwise empty blocks
+
+Mining an empty mempool would give a block with only the coinbase, whose Merkle tree is a single node. So whenever a block is mined (Mine & watch, Mine a new block, Auto-mine, Add block to blockchain) and nothing is waiting, the bridge first submits a few small transfers between random demo wallets: 1–10 coins each, fee 1, signed with the sender's RSA key and checked like any other transaction. They show up as `tx_submitted` lines in Live events.
+
+| Option | Effect |
+| :--- | :--- |
+| `--demo-traffic 6` (default) | Up to 6 demo transfers when the mempool is empty |
+| `--demo-traffic 0` | Off: an empty mempool gives a coinbase-only block |
+
+Transfers only move coins; total supply still grows by exactly 50 per block. Your own transfers are never mixed with demo ones: if anything is already waiting, the block takes just that.
+
 ---
 
 ## 7. A 10-minute demo script
@@ -440,7 +459,7 @@ Events come from the server, so if two browser tabs are open, both see every eve
 1. **Passcode vault.** On the welcome page type a wrong 8-digit code first: watch a block seal for every digit, then the red alarm and the falling blocks. Then type `12345678` and let the blocks burst across the page into the Explorer.
 2. **Explorer.** Point at the chain strip: each card's *prev* equals the hash on its left. Click block #5 and show its header bar and Merkle tree.
 3. **Send coins.** Choose Alice → Bob, 8 coins, fee 1, then **Sign & send**. Show the status line (UTXO spent, change) and the transaction in Mempool and Live events.
-4. **Merkle proof.** In the inspector, click a transaction and show the teal path and the 4 sibling hashes: "a phone wallet only needs these, not the whole block".
+4. **Merkle proof.** In the inspector the proof for tx 1 is already drawn. Click another transaction and show the teal path and the amber sibling hashes (4 with 9 transactions): "a phone wallet only needs these, not the whole block".
 5. **Mine & watch.** Let Block Forge play all five steps. Pause on **Hash** for the avalanche grid and on **Proof-of-Work** for the failed tries and the FOUND row.
 6. **Difficulty.** Back on Explorer, press **Auto-mine**. Watch the Difficulty card: blocks arrive far faster than 7.5 s, so every 4 blocks the difficulty rises a bit, `retarget` lines appear, and the effort bars grow. After a minute or so blocks take about 10 s. Press **Auto-mining… stop**.
 7. **Tamper Lab.** Pick a person (say Grace), an older block and a transaction, and press **Tamper**. Show the red card with the ⚠ badge, the broken chain row and the log. Then press **Check now** (or wait for the countdown): the notification says the tamper was fixed and Grace's card shows *↺ restored*.
