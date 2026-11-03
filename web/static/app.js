@@ -710,7 +710,9 @@
     },
     {
       tab: 'Merkle', title: 'Grow the Merkle tree',
-      body: (t) => `${t.leaves.length} leaves are paired and hashed upward until one 32-byte root is left. That root commits to every transaction in the block.`,
+      body: (t) => (t.leaves.length === 1
+        ? 'This block holds only its coinbase, so the tree has a single leaf and that leaf is already the root. Mine a block after sending coins to see the tree grow.'
+        : `${t.leaves.length} leaves are paired and hashed upward until one 32-byte root is left. That root commits to every transaction in the block.`),
       code: 'MerkleTree.from_transactions(txs).root',
       manim: 'class MerkleScene(Scene):\n  leaves on a row, pairs merge\n  into parents level by level',
     },
@@ -815,7 +817,7 @@
     const top = levels.length - 1;
     const rows = levels.slice().reverse().map((level, r) => {
       const l = top - r;
-      const name = l === top ? 'root' : l === 0 ? 'leaves' : `level ${l}`;
+      const name = top === 0 ? 'leaf = root' : l === top ? 'root' : l === 0 ? 'leaves' : `level ${l}`;
       const cls = l === top ? 'node is-root' : l === 0 ? 'node' : l === 1 ? 'node l1' : 'node mid';
       // Leaves appear first, the root last: delay grows with the level.
       return el('div', { class: 'merkle-row' },
@@ -824,11 +826,19 @@
           class: cls, title: h, text: h.slice(0, 8), style: { animationDelay: `${l * 450 + i * 50}ms` },
         }))));
     });
+    const sand = { background: 'var(--sand)', color: '#4A3F30' };
+    const sage = { background: 'var(--sage)', color: '#33402C' };
+    // Only claim the odd-tail rule when some level below the root actually had an odd count.
+    const hasOddTail = levels.slice(0, top).some((level) => level.length % 2 === 1);
+    const chips = top === 0
+      ? [el('span', { class: 'chip', text: 'leaf = H(0x00 ‖ tx_id)' }),
+        el('span', { class: 'chip', style: sand, text: '1 transaction → the leaf is the root' }),
+        el('span', { class: 'chip', style: sage, text: 'proof = 0 hashes' })]
+      : [el('span', { class: 'chip', text: 'parent = H(0x01 ‖ L ‖ R)' }),
+        ...(hasOddTail ? [el('span', { class: 'chip', style: sand, text: 'odd tail → pairs with itself' })] : []),
+        el('span', { class: 'chip', style: sage, text: `proof = ${top} hash${top === 1 ? '' : 'es'}` })];
     $('merkle-rows').replaceChildren(...rows,
-      el('div', { class: 'hash-flow', style: { justifyContent: 'center' } },
-        el('span', { class: 'chip', text: 'parent = H(0x01 ‖ L ‖ R)' }),
-        el('span', { class: 'chip', style: { background: 'var(--sand)', color: '#4A3F30' }, text: 'odd tail → pairs with itself' }),
-        el('span', { class: 'chip', style: { background: 'var(--sage)', color: '#33402C' }, text: `proof = ${top} hashes` })));
+      el('div', { class: 'hash-flow', style: { justifyContent: 'center' } }, ...chips));
     return sleep(top * 450 + 1200);
   }
 
