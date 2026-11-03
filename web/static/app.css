@@ -581,48 +581,194 @@ button:disabled {
   box-shadow: 0 0 0 4px rgba(79, 184, 180, 0.35);
 }
 
+/* Mining effort: log-scale bars, each with its own expected 2^D tick. */
 .effort {
-  display: flex;
-  gap: 14px;
-  align-items: flex-end;
-  justify-content: space-between;
+  --plot: 170px;
+  position: relative;
+  padding: 18px 0 0 40px;
   overflow-x: auto;
-  padding-bottom: 4px;
+}
+
+.effort-grid {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  right: 0;
+  height: var(--plot);
+  pointer-events: none;
+}
+
+.effort-line {
+  position: absolute;
+  left: 40px;
+  right: 0;
+  border-top: 1px dashed rgba(94, 110, 106, 0.22);
+}
+
+.effort-line span {
+  position: absolute;
+  left: -40px;
+  top: -8px;
+  width: 32px;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.effort-cols {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  min-width: max-content;
 }
 
 .effort-col {
+  flex: 1 0 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  flex: 1 0 34px;
+  gap: 4px;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
 }
 
-.effort-pill {
-  width: 34px;
-  height: 120px;
-  border-radius: 999px;
-  background: #EAE3D7;
-  box-shadow: inset 3px 3px 7px rgba(150, 136, 112, 0.25), inset -3px -3px 7px rgba(255, 255, 255, 0.85);
+.effort-slot {
+  position: relative;
+  width: 100%;
+  height: var(--plot);
   display: flex;
   align-items: flex-end;
-  padding: 4px;
+  justify-content: center;
+  border-bottom: 2px solid #D8CFC1;
 }
 
-.effort-fill {
-  width: 100%;
-  border-radius: 999px;
+.effort-bar {
+  position: relative;
+  width: 70%;
+  max-width: 30px;
+  min-height: 4px;
+  border-radius: 8px 8px 2px 2px;
   background: var(--teal-200);
-  transition: height 0.6s ease;
+  transition: height 0.6s cubic-bezier(.2, .8, .2, 1), background 0.2s, transform 0.2s;
 }
 
-.effort-col.is-selected .effort-fill {
+.effort-col.is-unlucky .effort-bar {
+  background: #E2B77A;
+}
+
+.effort-col.is-selected .effort-bar {
   background: var(--teal-900);
 }
 
-.effort-col span {
+.effort-col:hover .effort-bar,
+.effort-col:focus-visible .effort-bar {
+  transform: scaleX(1.12);
+}
+
+.effort-val {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.effort-exp {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  border-top: 2px dashed #A15C07;
+  z-index: 1;
+}
+
+.effort-idx {
   font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.effort-d {
+  font-family: var(--mono);
+  font-size: 10px;
   color: var(--muted);
+}
+
+.effort-col.is-selected .effort-idx {
+  color: var(--teal-900);
+}
+
+.effort-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.effort-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.effort-legend .sw {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.sw-lucky {
+  background: var(--teal-200);
+}
+
+.sw-unlucky {
+  background: #E2B77A;
+}
+
+.sw-expected {
+  height: 0 !important;
+  border-top: 2px dashed #A15C07;
+}
+
+.effort-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.effort-summary:empty {
+  display: none;
+}
+
+.chip-stat {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #EFE9DF;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.chip-stat b {
+  color: var(--ink);
+}
+
+.chip-stat.is-good {
+  background: var(--teal-50);
+  color: var(--teal-900);
+}
+
+.chip-stat.is-warm {
+  background: #F6E7CF;
+  color: #6B3A04;
 }
 
 .dock {
@@ -976,10 +1122,70 @@ button.list-item[aria-pressed="true"] {
   min-width: 640px;
 }
 
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tree-name {
+  flex: 0 0 64px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .tree-level {
+  flex: 1;
   display: flex;
   justify-content: center;
   gap: 8px;
+}
+
+.tree-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.tree-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-legend .sw {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+}
+
+.sw-chosen {
+  background: var(--teal-900);
+}
+
+.sw-path {
+  background: var(--teal-50);
+  box-shadow: inset 0 0 0 1.5px var(--teal-900);
+}
+
+.sw-sibling {
+  background: #F6E7CF;
+  box-shadow: inset 0 0 0 1.5px #B9771F;
+}
+
+.proof-note {
+  margin: 16px 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.proof-note:empty {
+  display: none;
 }
 
 .node {
@@ -999,15 +1205,29 @@ button.list-item[aria-pressed="true"] {
   padding: 9px 16px;
 }
 
+.node.is-chosen {
+  background: var(--teal-900);
+  color: var(--cream);
+  font-weight: 600;
+  box-shadow: none;
+}
+
 .node.is-path {
-  background: var(--teal-400);
-  color: var(--night);
+  background: var(--teal-50);
+  color: var(--teal-900);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1.5px var(--teal-900);
+}
+
+.node.is-root.is-path {
+  padding: 9px 16px;
 }
 
 .node.is-sibling {
-  background: var(--teal-50);
-  color: var(--teal-900);
-  box-shadow: 0 0 0 2px var(--teal-200);
+  background: #F6E7CF;
+  color: #6B3A04;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1.5px #B9771F;
 }
 
 .events {
@@ -2574,8 +2794,17 @@ html.is-landing body {
   background: var(--teal-200);
 }
 
+/* The inspector stretches to the side column's height: let the transaction list take the
+   spare room instead of leaving a gap under a short scroll box, and scroll only past ~12 rows. */
+.main-col {
+  display: flex;
+  flex-direction: column;
+}
+
 .tx-scroll {
-  max-height: 360px;
+  flex: 1 0 auto;
+  max-height: 720px;
+  align-content: start;
 }
 
 .fill-card .scroll-box {

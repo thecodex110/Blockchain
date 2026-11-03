@@ -407,19 +407,50 @@
   }
 
   function renderEffort() {
-    const recent = S.state.blocks.slice(1).slice(-8);
-    // Log scale: one difficulty bit doubles the expected work.
-    const logMax = Math.max(...recent.map((b) => Math.log2(b.nonce + 1)), 4);
-    $('effort').replaceChildren(...recent.map((b) => el('button', {
-      class: `effort-col${b.index === S.selected ? ' is-selected' : ''}`,
-      type: 'button', style: { border: 0, background: 'none', padding: 0 },
-      'aria-label': `Block ${b.index}: ${b.nonce + 1} hashes at difficulty ${b.difficulty}`,
-      onclick: () => selectBlock(b.index),
-    },
-      el('span', { class: 'mono', style: { color: 'var(--teal-900)' }, text: compact(b.nonce + 1) }),
-      el('div', { class: 'effort-pill' }, el('div', { class: 'effort-fill', style: { height: `${Math.max(6, Math.round(Math.log2(b.nonce + 1) / logMax * 112))}px` } })),
-      el('span', { text: `#${b.index}` }),
-      el('span', { class: 'mono', style: { fontSize: '11px' }, text: `D${b.difficulty}` }))));
+    const recent = S.state.blocks.slice(1).slice(-12);
+    if (!recent.length) {
+      $('effort').replaceChildren(el('p', { class: 'muted', text: 'No mined blocks yet.' }));
+      $('effort-summary').textContent = '';
+      return;
+    }
+    // Log scale: one difficulty bit doubles the expected work, so each grid line is 4x the one below.
+    const tries = (b) => b.nonce + 1;
+    const top = Math.max(4, Math.ceil(Math.max(...recent.map((b) => Math.max(Math.log2(tries(b)), b.difficulty))) / 2) * 2);
+    const pct = (v) => `${Math.min(100, Math.log2(v) / top * 100)}%`;
+    const grid = [];
+    for (let k = 0; k <= top; k += 2) {
+      grid.push(el('div', { class: 'effort-line', style: { bottom: pct(2 ** k) } },
+        el('span', { text: compact(2 ** k) })));
+    }
+    const cols = recent.map((b) => {
+      const expected = 2 ** b.difficulty;
+      const lucky = tries(b) <= expected;
+      return el('button', {
+        class: `effort-col${lucky ? ' is-lucky' : ' is-unlucky'}${b.index === S.selected ? ' is-selected' : ''}`,
+        type: 'button',
+        title: `Block #${b.index}: ${tries(b)} hashes, expected about ${expected} at D${b.difficulty}`,
+        'aria-label': `Block ${b.index}: ${tries(b)} hashes, expected about ${expected} at difficulty ${b.difficulty}`,
+        onclick: () => selectBlock(b.index),
+      },
+        el('div', { class: 'effort-slot' },
+          el('div', { class: 'effort-exp', style: { bottom: pct(expected) } }),
+          el('div', { class: 'effort-bar', style: { height: pct(Math.max(tries(b), 1.15)) } },
+            el('span', { class: 'effort-val', text: compact(tries(b)) }))),
+        el('span', { class: 'effort-idx', text: `#${b.index}` }),
+        el('span', { class: 'effort-d', text: `D${b.difficulty}` }));
+    });
+    $('effort').replaceChildren(el('div', { class: 'effort-grid', 'aria-hidden': 'true' }, ...grid),
+      el('div', { class: 'effort-cols' }, ...cols));
+    const total = recent.reduce((s, b) => s + tries(b), 0);
+    const expectedTotal = recent.reduce((s, b) => s + 2 ** b.difficulty, 0);
+    const luckiest = recent.reduce((a, b) => (tries(b) / 2 ** b.difficulty < tries(a) / 2 ** a.difficulty ? b : a));
+    const hardest = recent.reduce((a, b) => (tries(b) / 2 ** b.difficulty > tries(a) / 2 ** a.difficulty ? b : a));
+    const ratio = total / expectedTotal;
+    $('effort-summary').replaceChildren(
+      el('span', { class: 'chip-stat' }, el('b', { text: compact(Math.round(total / recent.length)) }), ` avg hashes · expected ${compact(Math.round(expectedTotal / recent.length))}`),
+      el('span', { class: 'chip-stat' }, 'luckiest ', el('b', { text: `#${luckiest.index}` }), ` · ${compact(tries(luckiest))}`),
+      el('span', { class: 'chip-stat' }, 'hardest ', el('b', { text: `#${hardest.index}` }), ` · ${compact(tries(hardest))}`),
+      el('span', { class: `chip-stat ${ratio <= 1 ? 'is-good' : 'is-warm'}` }, el('b', { text: `${ratio.toFixed(2)}×` }), ' of the expected work'));
   }
 
   let knownTip = -1;
@@ -519,6 +550,8 @@
     try {
       S.detail = await api.get(`/api/block?index=${index}`);
       renderInspector();
+      // Show a proof straight away: the first transfer, or the coinbase in a one-transaction block.
+      if (S.selected === index) loadProof(S.detail.transactions.length > 1 ? 1 : 0);
     } catch (err) {
       $('inspect-kv').replaceChildren(el('dd', { text: err.message }));
     }
@@ -546,18 +579,27 @@
     const top = levels.length - 1;
     $('tree').replaceChildren(...levels.slice().reverse().map((level, r) => {
       const l = top - r;
-      return el('div', { class: 'tree-level' }, ...level.map((h, i) => {
-        const key = `${l}-${i}`;
-        let cls = 'node';
-        if (l === top) cls += ' is-root';
-        else if (onPath.has(key)) cls += ' is-path';
-        else if (sibs.has(key)) cls += ' is-sibling';
-        return el('span', { class: cls, title: h, text: h.slice(0, 8) });
-      }));
+      const name = top === 0 ? 'leaf = root' : l === top ? 'root' : l === 0 ? 'leaves' : `level ${l}`;
+      return el('div', { class: 'tree-row' },
+        el('span', { class: 'tree-name', text: name }),
+        el('div', { class: 'tree-level' }, ...level.map((h, i) => {
+          const key = `${l}-${i}`;
+          let cls = 'node';
+          if (proof && l === 0 && i === proof.tx_index) cls += ' is-chosen';
+          else if (onPath.has(key)) cls += l === top ? ' is-root is-path' : ' is-path';
+          else if (sibs.has(key)) cls += ' is-sibling';
+          else if (l === top) cls += ' is-root';
+          return el('span', { class: cls, title: h, text: h.slice(0, 8) });
+        })));
     }));
     $('proof-label').textContent = proof
-      ? `Proof for tx ${proof.tx_id.slice(0, 8)} · ${proof.step_count} hashes · ${proof.verified ? 'verified ✓' : 'FAILED'}`
+      ? `Proof for tx ${proof.tx_index} (${proof.tx_id.slice(0, 8)}) · ${proof.step_count} hash${proof.step_count === 1 ? '' : 'es'} · ${proof.verified ? 'verified ✓' : 'FAILED'}`
       : 'Pick a transaction to see its proof path';
+    const oddTail = proof && proof.siblings.some(([l, i]) => onPath.has(`${l}-${i}`));
+    $('proof-note').textContent = !proof ? ''
+      : proof.step_count === 0
+        ? 'This block has a single transaction, so its leaf is already the root: the proof is empty.'
+        : `A light wallet needs only these ${proof.step_count} amber hash${proof.step_count === 1 ? '' : 'es'} to rebuild the root ${proof.merkle_root.slice(0, 8)} from tx ${proof.tx_index}${oddTail ? ' (where a level is odd, the last node pairs with itself)' : ''}, then compares it with the root in the 88-byte header it already trusts.`;
 
     $('tx-count').textContent = `${d.transactions.length} in this block`;
     $('tx-list').replaceChildren(...d.transactions.map((tx, i) => el('button', {

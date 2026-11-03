@@ -372,12 +372,16 @@
           <div class="pace-scale" id="pace-scale"></div>
         </div>
         <div class="card card-sm span-2">
-          <div class="card-head" style="margin-bottom:12px">
+          <div class="card-head" style="margin-bottom:10px">
             <h3>Mining effort</h3>
-            <span class="muted" style="font-size:13px">hashes tried per block (log scale) · expected ≈
-              2<sup>D</sup></span>
+            <div class="effort-legend" aria-hidden="true">
+              <span><i class="sw sw-lucky"></i><span>at or under 2<sup>D</sup></span></span>
+              <span><i class="sw sw-unlucky"></i><span>over 2<sup>D</sup></span></span>
+              <span><i class="sw sw-expected"></i><span>expected 2<sup>D</sup></span></span>
+            </div>
           </div>
           <div class="effort" id="effort"></div>
+          <p class="effort-summary" id="effort-summary"></p>
         </div>
       </section>
 
@@ -464,14 +468,21 @@
             B</span><span>time</span><span>D</span><span>nonce</span></div>
         <dl class="kv" id="inspect-kv"></dl>
         <div class="well" style="border-radius:24px;padding:20px">
-          <div class="card-head" style="margin-bottom:14px">
+          <div class="card-head" style="margin-bottom:6px">
             <h3 id="tree-title">Merkle tree</h3>
-            <span class="muted" style="font-size:13px" id="proof-label">Pick a transaction to see its proof path</span>
+            <div class="tree-legend" aria-hidden="true">
+              <span><i class="sw sw-chosen"></i>chosen tx</span>
+              <span><i class="sw sw-path"></i>recomputed</span>
+              <span><i class="sw sw-sibling"></i>proof hash (sent)</span>
+            </div>
           </div>
+          <p class="muted" style="margin:0 0 14px;font-size:13px" id="proof-label">Pick a transaction to see its proof
+            path</p>
           <div class="tree-scroll">
             <div class="tree" id="tree"></div>
           </div>
-          <p class="muted" style="margin:14px 0 0;font-size:13px">Leaf <span class="mono">H(0x00‖tx_id)</span> · parent
+          <p class="proof-note" id="proof-note" role="status"></p>
+          <p class="muted" style="margin:10px 0 0;font-size:13px">Leaf <span class="mono">H(0x00‖tx_id)</span> · parent
             <span class="mono">H(0x01‖L‖R)</span> · an odd last node pairs with itself.</p>
         </div>
         <div class="card-head" style="margin:22px 0 10px">
