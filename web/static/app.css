@@ -612,7 +612,7 @@ button:disabled {
   width: 32px;
   text-align: right;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
 }
 
@@ -697,7 +697,7 @@ button:disabled {
 
 .effort-d {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
 }
 
