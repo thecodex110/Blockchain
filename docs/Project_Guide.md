@@ -465,7 +465,7 @@ The **demo chain** used by the terminal and the web app: Genesis gives 20 named 
 
 ## 12. Tests
 
-`python3 run_tests.py` runs 128 tests across 14 modules (one is skipped):
+`python3 run_tests.py` runs 131 tests across 14 modules (one is skipped):
 
 | Module | Covers |
 | :--- | :--- |

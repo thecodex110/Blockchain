@@ -56,7 +56,7 @@ Shown at `http://127.0.0.1:8080` (or `#welcome`), in the same cream-and-teal loo
 | **Floating blocks** | The real last five blocks of the chain, joined by moving links. The bold leading zeros of each hash are its proof-of-work |
 | **Black capsule** | Live numbers: height, current difficulty, and how many ledger copies are in sync |
 | **Four cards** | Explorer, Block Forge, Tamper Lab, People — click one to jump straight to that page |
-| **Built from first principles** | 128 tests, no third-party packages in the core, the number of ledger copies, and the difficulty range so far |
+| **Built from first principles** | 131 tests, no third-party packages in the core, the number of ledger copies, and the difficulty range so far |
 
 Click the **Blockchain-Lite** logo in the app to come back to the welcome page.
 
@@ -110,7 +110,12 @@ The margin rails appear when the window is at least 1560 px wide (there is no sp
 | :--- | :--- |
 | **Blockchain-Lite** logo | Goes back to the welcome page |
 | **Explorer · Block Forge · Tamper Lab · People** | Page switcher. The raised pill is the page you are on |
-| **Live pill** (black, right) | Connection to the bridge's live event stream. Pulsing teal dot + `Live · 127.0.0.1:8080` = connected. `Reconnecting…` = the stream dropped and the browser is retrying. `Bridge unreachable: …` = the server is not running |
+| **Live pill** (black, right) | Connection to the bridge's live event stream. Pulsing dot + `Live · 127.0.0.1:8080` = connected. `Reconnecting…` = the stream dropped and the browser is retrying. `Bridge unreachable: …` = the server is not running |
+| **Sun / moon button** (far right) | Switches between the dark theme (the default) and the light theme. The choice is remembered in this browser. The same button sits at the top right of the welcome page |
+
+### 2.1 Dark and light themes
+
+The app opens in a **dark theme**: midnight `#161E2F` background, navy `#242F49` cards, slate `#384358` lines, a peach `#FFA586` accent where the light theme uses teal, crimson `#B51A2B` for danger (tampering, broken links, slower-than-expected blocks) and wine `#541A2E` for highlights such as Merkle proof hashes. The **light theme** is the original cream-and-teal look. Every colour is a CSS token in `web/static/app.css` (`:root` for light, `html[data-theme="dark"]` for dark), so switching is instant and nothing reloads. Where this guide names a colour (teal, amber, dark), it describes the light theme; the dark theme uses the matching colour from its own palette.
 
 ---
 

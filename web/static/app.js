@@ -52,6 +52,24 @@
   }
   const api = { get: (p) => call('GET', p), post: (p, b) => call('POST', p, b || {}) };
 
+  // ------------------------------------------------------------------ theme
+
+  /** Dark by default; index.html applies the saved theme before first paint. Colours are CSS tokens, so no re-render. */
+  function syncThemeToggles() {
+    const dark = document.documentElement.dataset.theme !== 'light';
+    document.querySelectorAll('[data-theme-toggle]').forEach((b) => {
+      b.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+      b.title = dark ? 'Light theme' : 'Dark theme';
+    });
+  }
+  document.querySelectorAll('[data-theme-toggle]').forEach((b) => b.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('blt-theme', next); } catch (_) { /* storage blocked: still switches for this visit */ }
+    syncThemeToggles();
+  }));
+  syncThemeToggles();
+
   /** Ring gauge (black dock). */
   function gauge(node, pct, color, value, label, icon) {
     const C = 2 * Math.PI * 30;
@@ -74,9 +92,9 @@
 
   const linkSvg = (bad) => {
     const s = svg('svg', { width: 56, height: 20, viewBox: '0 0 56 20', class: 'link', 'aria-hidden': 'true' });
-    s.append(svg('path', { d: 'M6 10 L50 10', class: bad ? '' : 'flow', stroke: bad ? '#B4523C' : '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-dasharray': bad ? '3 7' : 'none' }));
-    s.append(svg('circle', { cx: 6, cy: 10, r: 5, fill: bad ? '#E2B3A5' : '#98D8D0' }));
-    s.append(svg('circle', { cx: 50, cy: 10, r: 5, fill: bad ? '#E2B3A5' : '#10606F' }));
+    s.append(svg('path', { d: 'M6 10 L50 10', class: bad ? '' : 'flow', stroke: bad ? 'var(--danger)' : 'var(--teal-400)', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-dasharray': bad ? '3 7' : 'none' }));
+    s.append(svg('circle', { cx: 6, cy: 10, r: 5, fill: bad ? 'var(--danger-200)' : 'var(--teal-200)' }));
+    s.append(svg('circle', { cx: 50, cy: 10, r: 5, fill: bad ? 'var(--danger-200)' : 'var(--teal-900)' }));
     return s;
   };
 
@@ -181,16 +199,16 @@
     renderWallets();
     renderRails();
 
-    gauge($('gauge-valid'), chain.is_valid ? 1 : 0.05, chain.is_valid ? '#4FB8B4' : '#F0A592', chain.is_valid ? '100%' : 'broken', 'valid', chain.is_valid ? '✓' : '✗');
-    gauge($('gauge-mempool'), mempool.length / 10, '#98D8D0', `${mempool.length}/10`, 'mempool', 'tx');
+    gauge($('gauge-valid'), chain.is_valid ? 1 : 0.05, chain.is_valid ? 'var(--teal-400)' : 'var(--coral)', chain.is_valid ? '100%' : 'broken', 'valid', chain.is_valid ? '✓' : '✗');
+    gauge($('gauge-mempool'), mempool.length / 10, 'var(--teal-200)', `${mempool.length}/10`, 'mempool', 'tx');
     const cons = S.state.consensus;
-    gauge($('gauge-diff'), cons.difficulty / cons.max_difficulty, '#E8DDCF', `${cons.difficulty} bits`, 'difficulty', 'D');
+    gauge($('gauge-diff'), cons.difficulty / cons.max_difficulty, 'var(--sand-hi)', `${cons.difficulty} bits`, 'difficulty', 'D');
     const peers = (S.state.network && S.state.network.peers) || [];
     const synced = peers.filter((p) => p.status === 'ok').length;
-    gauge($('gauge-copies'), peers.length ? synced / peers.length : 0, synced === peers.length ? '#4FB8B4' : '#F0A592', `${synced}/${peers.length}`, 'copies', 'net');
+    gauge($('gauge-copies'), peers.length ? synced / peers.length : 0, synced === peers.length ? 'var(--teal-400)' : 'var(--coral)', `${synced}/${peers.length}`, 'copies', 'net');
     const avg = cons.window_avg_block_time;
     const target = cons.target_block_time || 10;
-    gauge($('gauge-time'), avg === null || avg === undefined ? 0 : Math.min(1, avg / (2 * target)), '#98D8D0', avg === null || avg === undefined ? '–' : secs(avg), 'avg block', 's');
+    gauge($('gauge-time'), avg === null || avg === undefined ? 0 : Math.min(1, avg / (2 * target)), 'var(--teal-200)', avg === null || avg === undefined ? '–' : secs(avg), 'avg block', 's');
 
     renderDifficulty(cons);
     renderEffort();
@@ -270,7 +288,7 @@
 
   function ghostCubeSvg() {
     const s = svg('svg', { viewBox: '0 0 120 132', 'aria-hidden': 'true' });
-    const face = (points) => svg('polygon', { points, fill: 'rgba(226,244,240,0.55)', stroke: '#10606F', 'stroke-width': 1.6, 'stroke-dasharray': '6 5', 'stroke-linejoin': 'round' });
+    const face = (points) => svg('polygon', { points, fill: 'var(--teal-50)', 'fill-opacity': 0.55, stroke: 'var(--teal-900)', 'stroke-width': 1.6, 'stroke-dasharray': '6 5', 'stroke-linejoin': 'round' });
     s.append(face('60,6 112,34 60,62 8,34'), face('8,34 60,62 60,126 8,98'), face('112,34 60,62 60,126 112,98'));
     return s;
   }
@@ -294,9 +312,9 @@
       if (i > 0) {
         const link = svg('svg', { class: 'rail-link', width: 20, height: 34, viewBox: '0 0 20 34', 'aria-hidden': 'true' });
         link.append(
-          svg('path', { d: 'M10 4v26', stroke: '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round' }),
-          svg('circle', { cx: 10, cy: 4, r: 4, fill: '#10606F' }),
-          svg('circle', { cx: 10, cy: 30, r: 4, fill: '#98D8D0' }));
+          svg('path', { d: 'M10 4v26', stroke: 'var(--teal-400)', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+          svg('circle', { cx: 10, cy: 4, r: 4, fill: 'var(--teal-900)' }),
+          svg('circle', { cx: 10, cy: 30, r: 4, fill: 'var(--teal-200)' }));
         items.push(link);
       }
       const zeros = b.hash.match(/^0*/)[0];
@@ -485,7 +503,7 @@
             b.block_time === null ? '' : ` · ${secs(b.block_time)}`))));
     });
     const dashed = svg('svg', { width: 56, height: 20, viewBox: '0 0 56 20', class: 'link', 'aria-hidden': 'true' });
-    dashed.append(svg('path', { d: 'M6 10 L50 10', stroke: '#CFD8C4', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-dasharray': '2 7' }));
+    dashed.append(svg('path', { d: 'M6 10 L50 10', stroke: 'var(--sage-hi)', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-dasharray': '2 7' }));
     items.push(dashed, el('div', { class: 'pending-block' },
       el('span', { class: 'num', text: `#${S.state.chain.height}` }),
       el('span', { text: S.state.mempool.length ? `${S.state.mempool.length} tx ready to mine` : 'Waiting for transactions' })));
@@ -599,7 +617,7 @@
     $('proof-note').textContent = !proof ? ''
       : proof.step_count === 0
         ? 'This block has a single transaction, so its leaf is already the root: the proof is empty.'
-        : `A light wallet needs only these ${proof.step_count} amber hash${proof.step_count === 1 ? '' : 'es'} to rebuild the root ${proof.merkle_root.slice(0, 8)} from tx ${proof.tx_index}${oddTail ? ' (where a level is odd, the last node pairs with itself)' : ''}, then compares it with the root in the 88-byte header it already trusts.`;
+        : `A light wallet needs only these ${proof.step_count} proof hash${proof.step_count === 1 ? '' : 'es'} to rebuild the root ${proof.merkle_root.slice(0, 8)} from tx ${proof.tx_index}${oddTail ? ' (where a level is odd, the last node pairs with itself)' : ''}, then compares it with the root in the 88-byte header it already trusts.`;
 
     $('tx-count').textContent = `${d.transactions.length} in this block`;
     $('tx-list').replaceChildren(...d.transactions.map((tx, i) => el('button', {
@@ -652,7 +670,7 @@
       await api.post('/api/autominer', { on });
       await refresh();
     } catch (err) {
-      logEvent('error', err.message, '#F0A592');
+      logEvent('error', err.message, 'var(--coral)');
     }
   });
   $('mine-btn').addEventListener('click', () => { location.hash = '#forge'; mineAndWatch(); });
@@ -682,38 +700,38 @@
     es.addEventListener('error', () => setLive(false, 'Reconnecting…'));
     es.addEventListener('tx_submitted', (e) => {
       const { tx, mempool_size: size } = JSON.parse(e.data);
-      logEvent('tx_submitted', `${tx.tx_id.slice(0, 8)} ${tx.from} → ${tx.outputs[0].to} · ${tx.outputs[0].amount} (mempool ${size})`, '#98D8D0');
+      logEvent('tx_submitted', `${tx.tx_id.slice(0, 8)} ${tx.from} → ${tx.outputs[0].to} · ${tx.outputs[0].amount} (mempool ${size})`, 'var(--teal-200)');
       if (!S.mining) refreshSoon();
     });
     es.addEventListener('block_mined', (e) => {
       const { block, stats } = JSON.parse(e.data);
-      logEvent('block_mined', `#${block.index} ${short(block.hash)} · D${block.difficulty} · ${compact(stats.hashes_tried)} hashes in ${stats.elapsed_seconds.toFixed(2)}s · ${block.tx_count} tx`, '#4FB8B4');
+      logEvent('block_mined', `#${block.index} ${short(block.hash)} · D${block.difficulty} · ${compact(stats.hashes_tried)} hashes in ${stats.elapsed_seconds.toFixed(2)}s · ${block.tx_count} tx`, 'var(--teal-400)');
       if (!S.mining) refreshSoon();
     });
     es.addEventListener('difficulty_changed', (e) => {
       const d = JSON.parse(e.data);
       const why = d.to > d.from ? `blocks averaged ${secs(d.window_avg_block_time)} (target ${secs(d.target_block_time)}): too fast` : `blocks averaged ${secs(d.window_avg_block_time)} (target ${secs(d.target_block_time)}): too slow`;
-      logEvent('retarget', `difficulty ${d.from} → ${d.to} bits · ${why}`, d.to > d.from ? '#E8DDCF' : '#CFD8C4');
+      logEvent('retarget', `difficulty ${d.from} → ${d.to} bits · ${why}`, d.to > d.from ? 'var(--sand-hi)' : 'var(--sage-hi)');
     });
     es.addEventListener('autominer', (e) => {
-      logEvent('auto_miner', JSON.parse(e.data).running ? 'started' : 'stopping after the current block', '#98D8D0');
+      logEvent('auto_miner', JSON.parse(e.data).running ? 'started' : 'stopping after the current block', 'var(--teal-200)');
       refreshSoon();
     });
     es.addEventListener('copy_tampered', (e) => {
       const d = JSON.parse(e.data);
-      logEvent('copy_tampered', `${d.name}'s copy · block #${d.block_index} amount ${d.old_amount} → ${d.new_amount}`, '#F0A592');
+      logEvent('copy_tampered', `${d.name}'s copy · block #${d.block_index} amount ${d.old_amount} → ${d.new_amount}`, 'var(--coral)');
       toast(`⚠ ${d.name}'s ledger copy was tampered`, `Block #${d.block_index}: amount ${d.old_amount} changed to ${d.new_amount}. The network will check every copy in ${Math.ceil(d.next_audit_in)}s.`, 'danger');
       refreshNetwork();
     });
     es.addEventListener('network_audit', (e) => {
       const d = JSON.parse(e.data);
-      logEvent('network_check', `${d.valid_copies} of ${d.copies} copies valid · majority ${d.majority_size} · repaired ${d.repaired.length}`, '#98D8D0');
+      logEvent('network_check', `${d.valid_copies} of ${d.copies} copies valid · majority ${d.majority_size} · repaired ${d.repaired.length}`, 'var(--teal-200)');
       refreshNetwork();
     });
     es.addEventListener('ledger_repaired', (e) => {
       const d = JSON.parse(e.data);
       S.repairedFlash[d.name] = Date.now() + 10000;
-      logEvent('ledger_repaired', `${d.name}'s copy restored from the majority (${d.majority_size} of ${d.copies}) · block #${d.block_index}`, '#4FB8B4');
+      logEvent('ledger_repaired', `${d.name}'s copy restored from the majority (${d.majority_size} of ${d.copies}) · block #${d.block_index}`, 'var(--teal-400)');
       toast(`✓ Tamper fixed: ${d.name}'s copy restored`, `Block #${d.block_index} ${d.reason}. ${d.majority_size} of ${d.copies} copies agreed, so ${d.name} now holds that majority ledger again.`, 'ok');
       if (S.lastTamper && S.lastTamper.name === d.name) {
         S.lastTamper.repaired = d;
@@ -723,14 +741,14 @@
     });
     es.addEventListener('person_joined', (e) => {
       const d = JSON.parse(e.data);
-      logEvent('person_joined', `${d.person.name} · ${d.person.address.slice(0, 8)}…${d.funding_tx ? ` · ${d.funding_tx.outputs[0].amount} coins pending` : ''}`, '#E8DDCF');
+      logEvent('person_joined', `${d.person.name} · ${d.person.address.slice(0, 8)}…${d.funding_tx ? ` · ${d.funding_tx.outputs[0].amount} coins pending` : ''}`, 'var(--sand-hi)');
       toast(`${d.person.name} joined the network`, `New RSA wallet and a full copy of the ledger.${d.funding_tx ? ` ${d.funding_tx.outputs[0].amount} coins from the Miner arrive in the next block.` : ''}`, 'ok');
       refreshSoon();
     });
     es.addEventListener('render_ready', (e) => {
       const { block_index: idx, files } = JSON.parse(e.data);
       files.forEach((f) => S.renders.add(f));
-      logEvent('render_ready', `Manim video for #${idx}`, '#E8DDCF');
+      logEvent('render_ready', `Manim video for #${idx}`, 'var(--sand-hi)');
       if (S.trace && S.trace.block.index === idx) showRender();
     });
   }
@@ -868,8 +886,8 @@
           class: cls, title: h, text: h.slice(0, 8), style: { animationDelay: `${l * 450 + i * 50}ms` },
         }))));
     });
-    const sand = { background: 'var(--sand)', color: '#4A3F30' };
-    const sage = { background: 'var(--sage)', color: '#33402C' };
+    const sand = { background: 'var(--sand)', color: 'var(--on-sand)' };
+    const sage = { background: 'var(--sage)', color: 'var(--on-sage)' };
     // Only claim the odd-tail rule when some level below the root actually had an odd count.
     const hasOddTail = levels.slice(0, top).some((level) => level.length % 2 === 1);
     const chips = top === 0
@@ -897,7 +915,7 @@
       field('var(--sand)', `D=${b.difficulty}`),
       nonceField);
     $('pow-target').replaceChildren(`target: first ${t.target_bits} bits zero`, el('br'),
-      el('span', { class: 'mono', style: { color: 'var(--teal-50)' }, text: `hash < 2^${256 - t.target_bits}` }), el('br'),
+      el('span', { class: 'mono', style: { color: 'var(--on-night)' }, text: `hash < 2^${256 - t.target_bits}` }), el('br'),
       `expected ≈ 2^${t.target_bits} = ${2 ** t.target_bits}`);
     const list = $('tries');
     list.replaceChildren();
@@ -1021,7 +1039,7 @@
     danger: 'M12 4 3 20h18L12 4zM12 10v4M12 17v.5',
   };
   function toast(title, body, kind) {
-    const icon = svg('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: '#FAF6F0', 'stroke-width': 2.4, 'stroke-linecap': 'round', 'aria-hidden': 'true' });
+    const icon = svg('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--cream)', 'stroke-width': 2.4, 'stroke-linecap': 'round', 'aria-hidden': 'true' });
     icon.append(svg('path', { d: ICONS[kind] || ICONS.ok }));
     const node = el('div', { class: `toast${kind === 'danger' ? ' is-danger' : ''}`, role: 'status' },
       el('span', { class: 'icon' }, icon),
@@ -1062,7 +1080,7 @@
       const flash = S.repairedFlash[p.name] && S.repairedFlash[p.name] > now;
       const bad = p.status === 'tampered';
       const danger = bad ? (() => {
-        const i = svg('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: '#FAF6F0', 'stroke-width': 2.6, 'stroke-linecap': 'round', 'aria-hidden': 'true' });
+        const i = svg('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--cream)', 'stroke-width': 2.6, 'stroke-linecap': 'round', 'aria-hidden': 'true' });
         i.append(svg('path', { d: ICONS.danger }));
         return el('span', { class: 'danger', title: 'Tampered copy' }, i);
       })() : null;
@@ -1222,7 +1240,7 @@
       el('span', {}, el('span', { class: 'mono', style: { color: 'var(--teal-900)' }, text: tx.tx_id.slice(0, 8) }),
         ` · ${tx.from} → ${tx.outputs[0].to}`),
       el('span', { class: 'mono', style: { fontWeight: 500 }, text: tx.outputs[0].amount })))
-      : [el('p', { class: 'muted', style: { margin: 0, fontSize: '14px' }, text: 'Nothing pending. Add a transaction, or press the button to add a block with just the Miner’s reward.' })]));
+      : [el('p', { class: 'muted', style: { margin: 0, fontSize: '14px' }, text: 'Nothing pending. Add a transaction, or press the button: the node adds a few demo transfers so the block still has a Merkle tree.' })]));
     $('auto-warning').classList.toggle('hidden', !S.state.consensus.auto_mining);
 
     const peers = new Map(((S.state.network || {}).peers || []).map((p) => [p.name, p]));
@@ -1331,13 +1349,13 @@
 
   function cubeSvg() {
     const s = svg('svg', { width: 104, height: 114, viewBox: '0 0 120 132', 'aria-hidden': 'true' });
-    const face = (points, fill) => svg('polygon', { points, fill, stroke: '#10606F', 'stroke-width': 1.6, 'stroke-linejoin': 'round' });
+    const face = (points, fill) => svg('polygon', { points, fill, stroke: 'var(--teal-900)', 'stroke-width': 1.6, 'stroke-linejoin': 'round' });
     s.append(
-      face('60,6 112,34 60,62 8,34', '#FAF6F0'),
-      face('8,34 60,62 60,126 8,98', '#E2F4F0'),
-      face('112,34 60,62 60,126 112,98', '#98D8D0'),
-      svg('path', { d: 'M22 58v26M34 64v26M46 70v26', stroke: '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round' }),
-      svg('path', { d: 'M74 70l26-14M74 82l26-14M74 94l16-9', stroke: '#10606F', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.45 }));
+      face('60,6 112,34 60,62 8,34', 'var(--cream)'),
+      face('8,34 60,62 60,126 8,98', 'var(--teal-50)'),
+      face('112,34 60,62 60,126 112,98', 'var(--teal-200)'),
+      svg('path', { d: 'M22 58v26M34 64v26M46 70v26', stroke: 'var(--teal-400)', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+      svg('path', { d: 'M74 70l26-14M74 82l26-14M74 94l16-9', stroke: 'var(--teal-900)', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.45 }));
     return s;
   }
 
@@ -1350,9 +1368,9 @@
       if (i > 0) {
         const link = svg('svg', { class: 'lp-link', width: 64, height: 20, viewBox: '0 0 64 20', 'aria-hidden': 'true' });
         link.append(
-          svg('path', { d: 'M6 10h52', stroke: '#4FB8B4', 'stroke-width': 3, 'stroke-linecap': 'round' }),
-          svg('circle', { cx: 6, cy: 10, r: 5, fill: '#98D8D0' }),
-          svg('circle', { cx: 58, cy: 10, r: 5, fill: '#10606F' }));
+          svg('path', { d: 'M6 10h52', stroke: 'var(--teal-400)', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+          svg('circle', { cx: 6, cy: 10, r: 5, fill: 'var(--teal-200)' }),
+          svg('circle', { cx: 58, cy: 10, r: 5, fill: 'var(--teal-900)' }));
         items.push(link);
       }
       const zeros = b.hash.match(/^0*/)[0];
@@ -1462,7 +1480,7 @@
 
   function logLine(text, end, good) {
     return el('div', {}, el('span', { style: { color: 'var(--teal-400)' }, text: '› ' }), `${text} `,
-      el('span', { style: { fontWeight: 600, color: good ? 'var(--teal-400)' : '#F0A592' }, text: end }));
+      el('span', { style: { fontWeight: 600, color: good ? 'var(--teal-400)' : 'var(--coral)' }, text: end }));
   }
 
   /** The vault as it should look for this session: locked (enter a code) or already unlocked. */
@@ -1565,7 +1583,7 @@
     const at = (node, x, y) => { node.style.left = `${x}px`; node.style.top = `${y}px`; return node; };
     const pieces = [];
     ['0s', '.2s', '.4s'].forEach((delay, i) => {
-      const ring = at(el('span', { class: 'fx-ring', style: { animationDelay: delay, borderColor: ['#4FB8B4', '#10606F', '#E8DDCF'][i] } }), cx, cy);
+      const ring = at(el('span', { class: 'fx-ring', style: { animationDelay: delay, borderColor: ['var(--teal-400)', 'var(--teal-900)', 'var(--sand-hi)'][i] } }), cx, cy);
       pieces.push(ring);
     });
     const spots = [[-0.38, -0.36], [-0.17, -0.42], [0.17, -0.42], [0.38, -0.36], [-0.42, 0.12], [-0.2, 0.3], [0.2, 0.3], [0.42, 0.12]];
@@ -1573,9 +1591,9 @@
       const flyer = at(el('div', { class: 'fx-flyer', style: { animationDelay: `${i * 0.05}s` } }, vaultCube(), el('span', { text: `#${i + 1}` })), cx, cy);
       flyer.querySelector('svg').classList.add('is-filled');
       ['f-top', 'f-left', 'f-right'].forEach((cls, k) => {
-        flyer.querySelector(`.${cls}`).setAttribute('style', `fill:${['#FAF6F0', '#98D8D0', '#4FB8B4'][k]};stroke:#10606F;stroke-width:2.5;stroke-linejoin:round`);
+        flyer.querySelector(`.${cls}`).setAttribute('style', `fill:${['var(--cream)', 'var(--teal-200)', 'var(--teal-400)'][k]};stroke:var(--teal-900);stroke-width:2.5;stroke-linejoin:round`);
       });
-      flyer.querySelector('.lines').setAttribute('style', 'stroke:#10606F;stroke-width:3;stroke-linecap:round;opacity:.55');
+      flyer.querySelector('.lines').setAttribute('style', 'stroke:var(--teal-900);stroke-width:3;stroke-linecap:round;opacity:.55');
       flyer.style.setProperty('--tx', `${Math.round(fx2 * w)}px`);
       flyer.style.setProperty('--ty', `${Math.round(fy * h)}px`);
       flyer.style.setProperty('--rot', `${(i % 2 ? 1 : -1) * (25 + i * 3)}deg`);
@@ -1589,7 +1607,7 @@
       const spark = at(el('span', {
         class: 'fx-spark',
         text: src.slice((i * 3) % 40, ((i * 3) % 40) + 6),
-        style: { background: dark ? '#10606F' : '#F8F4EC', color: dark ? '#FAF6F0' : '#10606F', animationDelay: `${0.1 + (i % 5) * 0.06}s` },
+        style: { background: dark ? 'var(--teal-900)' : 'var(--card)', color: dark ? 'var(--cream)' : 'var(--teal-900)', animationDelay: `${0.1 + (i % 5) * 0.06}s` },
       }), cx, cy);
       spark.style.setProperty('--tx', `${Math.round(Math.cos(a) * r)}px`);
       spark.style.setProperty('--ty', `${Math.round(Math.sin(a) * r * 0.7)}px`);

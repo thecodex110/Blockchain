@@ -3,7 +3,7 @@ tags: [testing]
 ---
 # Test Suite
 
-`python3 run_tests.py` → **128 tests, 14 modules, 1 skipped, all OK** (~41 s on Python 3.9.6, checked 2026-10-28). Plain `unittest`, no pytest needed.
+`python3 run_tests.py` → **131 tests, 14 modules, 1 skipped, all OK** (~41 s on Python 3.9.6, checked 2026-10-28). Plain `unittest`, no pytest needed.
 
 | Module | Covers | Notes |
 |---|---|---|

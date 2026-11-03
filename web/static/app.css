@@ -27,6 +27,39 @@
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Manrope', system-ui, -apple-system, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Tokens that used to be literal colours; the dark theme redefines all of them. */
+  --sh: 150, 136, 112;          /* neumorphic shadow */
+  --hl: 255, 255, 255;          /* neumorphic highlight */
+  --accent-rgb: 79, 184, 180;
+  --deep-rgb: 16, 96, 111;
+  --night-rgb: 12, 26, 29;
+  --danger-rgb: 180, 82, 60;
+  --muted-rgb: 94, 110, 106;
+  --cream-rgb: 250, 246, 240;
+  --track-2: #E9E2D6;
+  --nav-ink: #4A5A57;
+  --dim: #7C9A97;
+  --on-sand: #4A3F30;
+  --on-sage: #33402C;
+  --sand-hi: #E8DDCF;
+  --sage-hi: #CFD8C4;
+  --axis: #D8CFC1;
+  --warm: #E2B77A;
+  --amber: #A15C07;
+  --amber-line: #B9771F;
+  --amber-50: #F6E7CF;
+  --on-amber: #6B3A04;
+  --teal-100: #CFE9E3;
+  --stage: #F4EFE6;
+  --bit: #E2DACB;
+  --down-bg: #F3E7DF;
+  --danger-200: #E2B3A5;
+  --coral: #F0A592;
+  --scratch-ink: #C8E6E0;
+  --scratch-cell: #16282C;
+  --vault-dim: #7FA9A3;
+  --on-night: #E2F4F0;          /* bright text on the black panels */
 }
 
 * {
@@ -36,7 +69,7 @@
 body {
   margin: 0;
   background-color: var(--ground);
-  background-image: radial-gradient(rgba(16, 96, 111, 0.13) 1.2px, transparent 1.2px);
+  background-image: radial-gradient(rgba(var(--deep-rgb), 0.13) 1.2px, transparent 1.2px);
   background-size: 22px 22px;
   color: var(--ink);
   font-family: var(--sans);
@@ -160,8 +193,8 @@ button:disabled {
   gap: 4px;
   padding: 5px;
   border-radius: 999px;
-  background: #E9E2D6;
-  box-shadow: inset 3px 3px 8px rgba(150, 136, 112, 0.28), inset -3px -3px 8px rgba(255, 255, 255, 0.85);
+  background: var(--track-2);
+  box-shadow: inset 3px 3px 8px rgba(var(--sh), 0.28), inset -3px -3px 8px rgba(var(--hl), 0.85);
 }
 
 .pill-track a,
@@ -170,7 +203,7 @@ button:disabled {
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #4A5A57;
+  color: var(--nav-ink);
   text-decoration: none;
   font-weight: 600;
   min-height: 44px;
@@ -184,7 +217,7 @@ button:disabled {
   background: var(--cream);
   color: var(--teal-900);
   font-weight: 700;
-  box-shadow: 3px 3px 8px rgba(150, 136, 112, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.9);
+  box-shadow: 3px 3px 8px rgba(var(--sh), 0.3), -2px -2px 6px rgba(var(--hl), 0.9);
 }
 
 .pill-track .is-done {
@@ -207,12 +240,12 @@ button:disabled {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #7C9A97;
+  background: var(--dim);
 }
 
 .live.is-on .live-dot {
   background: var(--teal-400);
-  box-shadow: 0 0 0 4px rgba(79, 184, 180, 0.25);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.25);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -291,7 +324,7 @@ button:disabled {
 .btn-primary {
   background: var(--teal-900);
   color: var(--cream);
-  box-shadow: 6px 6px 16px rgba(16, 96, 111, 0.3);
+  box-shadow: 6px 6px 16px rgba(var(--deep-rgb), 0.3);
 }
 
 .btn-primary:hover {
@@ -308,7 +341,7 @@ button:disabled {
 .btn-danger {
   background: var(--danger);
   color: var(--cream);
-  box-shadow: 6px 6px 16px rgba(180, 82, 60, 0.3);
+  box-shadow: 6px 6px 16px rgba(var(--danger-rgb), 0.3);
 }
 
 .btn-light {
@@ -374,7 +407,7 @@ button:disabled {
 
 .slot-cell {
   border-radius: 8px;
-  border: 1.5px dashed rgba(16, 96, 111, 0.22);
+  border: 1.5px dashed rgba(var(--deep-rgb), 0.22);
   display: grid;
   place-items: center;
   font-family: var(--mono);
@@ -501,7 +534,7 @@ button:disabled {
 
 .diff-arrow.is-down {
   background: var(--sand);
-  color: #4A3F30;
+  color: var(--on-sand);
   box-shadow: none;
 }
 
@@ -544,7 +577,7 @@ button:disabled {
 
 .pace-slow {
   background: var(--sand);
-  color: #4A3F30;
+  color: var(--on-sand);
 }
 
 /* A pointer under the bar, so it never covers the zone labels. */
@@ -578,7 +611,7 @@ button:disabled {
 .btn-soft[aria-pressed="true"] {
   background: var(--night);
   color: var(--teal-50);
-  box-shadow: 0 0 0 4px rgba(79, 184, 180, 0.35);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.35);
 }
 
 /* Mining effort: log-scale bars, each with its own expected 2^D tick. */
@@ -602,7 +635,7 @@ button:disabled {
   position: absolute;
   left: 40px;
   right: 0;
-  border-top: 1px dashed rgba(94, 110, 106, 0.22);
+  border-top: 1px dashed rgba(var(--muted-rgb), 0.22);
 }
 
 .effort-line span {
@@ -643,7 +676,7 @@ button:disabled {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  border-bottom: 2px solid #D8CFC1;
+  border-bottom: 2px solid var(--axis);
 }
 
 .effort-bar {
@@ -657,7 +690,7 @@ button:disabled {
 }
 
 .effort-col.is-unlucky .effort-bar {
-  background: #E2B77A;
+  background: var(--warm);
 }
 
 .effort-col.is-selected .effort-bar {
@@ -685,7 +718,7 @@ button:disabled {
   position: absolute;
   left: 4%;
   right: 4%;
-  border-top: 2px dashed #A15C07;
+  border-top: 2px dashed var(--amber);
   z-index: 1;
 }
 
@@ -730,12 +763,12 @@ button:disabled {
 }
 
 .sw-unlucky {
-  background: #E2B77A;
+  background: var(--warm);
 }
 
 .sw-expected {
   height: 0 !important;
-  border-top: 2px dashed #A15C07;
+  border-top: 2px dashed var(--amber);
 }
 
 .effort-summary {
@@ -752,7 +785,7 @@ button:disabled {
 .chip-stat {
   padding: 6px 10px;
   border-radius: 999px;
-  background: #EFE9DF;
+  background: var(--ground);
   font-size: 12px;
   color: var(--ink-2);
 }
@@ -767,8 +800,8 @@ button:disabled {
 }
 
 .chip-stat.is-warm {
-  background: #F6E7CF;
-  color: #6B3A04;
+  background: var(--amber-50);
+  color: var(--on-amber);
 }
 
 .dock {
@@ -782,7 +815,7 @@ button:disabled {
   justify-content: space-evenly;
   gap: 18px;
   color: var(--teal-50);
-  box-shadow: 12px 12px 28px rgba(12, 26, 29, 0.3);
+  box-shadow: 12px 12px 28px rgba(var(--night-rgb), 0.3);
 }
 
 .gauge {
@@ -875,7 +908,7 @@ button:disabled {
   text-align: left;
   background: var(--card);
   color: var(--ink);
-  box-shadow: 8px 8px 20px rgba(150, 136, 112, 0.28), -8px -8px 20px rgba(255, 255, 255, 0.9);
+  box-shadow: 8px 8px 20px rgba(var(--sh), 0.28), -8px -8px 20px rgba(var(--hl), 0.9);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -884,7 +917,7 @@ button:disabled {
 }
 
 .block-card.is-selected {
-  box-shadow: 0 0 0 3px var(--teal-400), 10px 10px 22px rgba(16, 96, 111, 0.22), -8px -8px 20px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 3px var(--teal-400), 10px 10px 22px rgba(var(--deep-rgb), 0.22), -8px -8px 20px rgba(var(--hl), 0.9);
 }
 
 .block-card.is-new {
@@ -993,9 +1026,9 @@ button:disabled {
 }
 
 .person[aria-pressed="true"] {
-  background: #CFE9E3;
+  background: var(--teal-100);
   color: var(--teal-900);
-  box-shadow: inset 3px 3px 7px rgba(16, 96, 111, 0.2), inset -3px -3px 7px rgba(255, 255, 255, 0.8);
+  box-shadow: inset 3px 3px 7px rgba(var(--deep-rgb), 0.2), inset -3px -3px 7px rgba(var(--hl), 0.8);
 }
 
 .form-grid {
@@ -1019,7 +1052,7 @@ button:disabled {
   border: 0;
   border-radius: 16px;
   background: var(--well);
-  box-shadow: inset 3px 3px 8px rgba(150, 136, 112, 0.25), inset -3px -3px 8px rgba(255, 255, 255, 0.85);
+  box-shadow: inset 3px 3px 8px rgba(var(--sh), 0.25), inset -3px -3px 8px rgba(var(--hl), 0.85);
   padding: 0 14px;
   font: inherit;
   font-size: 15px;
@@ -1058,7 +1091,7 @@ button:disabled {
   padding: 12px 16px;
   border-radius: 16px;
   background: var(--well);
-  box-shadow: inset 3px 3px 8px rgba(150, 136, 112, 0.22), inset -3px -3px 8px rgba(255, 255, 255, 0.85);
+  box-shadow: inset 3px 3px 8px rgba(var(--sh), 0.22), inset -3px -3px 8px rgba(var(--hl), 0.85);
   font-size: 14px;
   animation: fade-up 0.5s ease both;
 }
@@ -1174,8 +1207,8 @@ button.list-item[aria-pressed="true"] {
 }
 
 .sw-sibling {
-  background: #F6E7CF;
-  box-shadow: inset 0 0 0 1.5px #B9771F;
+  background: var(--amber-50);
+  box-shadow: inset 0 0 0 1.5px var(--amber-line);
 }
 
 .proof-note {
@@ -1195,7 +1228,7 @@ button.list-item[aria-pressed="true"] {
   border-radius: 999px;
   background: var(--card);
   color: var(--muted);
-  box-shadow: 2px 2px 5px rgba(150, 136, 112, 0.25), -2px -2px 5px rgba(255, 255, 255, 0.9);
+  box-shadow: 2px 2px 5px rgba(var(--sh), 0.25), -2px -2px 5px rgba(var(--hl), 0.9);
   transition: background 0.3s, color 0.3s;
 }
 
@@ -1224,10 +1257,10 @@ button.list-item[aria-pressed="true"] {
 }
 
 .node.is-sibling {
-  background: #F6E7CF;
-  color: #6B3A04;
+  background: var(--amber-50);
+  color: var(--on-amber);
   font-weight: 600;
-  box-shadow: inset 0 0 0 1.5px #B9771F;
+  box-shadow: inset 0 0 0 1.5px var(--amber-line);
 }
 
 .events {
@@ -1248,7 +1281,7 @@ button.list-item[aria-pressed="true"] {
 }
 
 .event .t {
-  color: #7C9A97;
+  color: var(--dim);
 }
 
 .event .k {
@@ -1284,10 +1317,10 @@ button.list-item[aria-pressed="true"] {
   flex: 3 1 640px;
   min-width: 0;
   min-height: 600px;
-  background: #F4EFE6;
+  background: var(--stage);
   border-radius: 36px;
   padding: 30px;
-  box-shadow: inset 6px 6px 16px rgba(150, 136, 112, 0.3), inset -6px -6px 16px rgba(255, 255, 255, 0.9);
+  box-shadow: inset 6px 6px 16px rgba(var(--sh), 0.3), inset -6px -6px 16px rgba(var(--hl), 0.9);
   overflow: hidden;
 }
 
@@ -1349,8 +1382,8 @@ button.list-item[aria-pressed="true"] {
   flex: 1 1 200px;
   height: 14px;
   border-radius: 999px;
-  background: #E9E2D6;
-  box-shadow: inset 2px 2px 5px rgba(150, 136, 112, 0.3), inset -2px -2px 5px rgba(255, 255, 255, 0.85);
+  background: var(--track-2);
+  box-shadow: inset 2px 2px 5px rgba(var(--sh), 0.3), inset -2px -2px 5px rgba(var(--hl), 0.85);
   position: relative;
 }
 
@@ -1459,7 +1492,7 @@ button.list-item[aria-pressed="true"] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 8px var(--teal-50), 0 0 0 10px var(--teal-200), 10px 10px 26px rgba(12, 26, 29, 0.35);
+  box-shadow: 0 0 0 8px var(--teal-50), 0 0 0 10px var(--teal-200), 10px 10px 26px rgba(var(--night-rgb), 0.35);
   flex-shrink: 0;
 }
 
@@ -1478,7 +1511,7 @@ button.list-item[aria-pressed="true"] {
 .bit {
   height: 11px;
   border-radius: 999px;
-  background: #E2DACB;
+  background: var(--bit);
   transition: background 0.3s;
 }
 
@@ -1646,7 +1679,7 @@ button.list-item[aria-pressed="true"] {
 .mini-block.is-new {
   background: var(--teal-900);
   color: var(--cream);
-  box-shadow: 0 0 0 6px var(--teal-50), 12px 12px 26px rgba(16, 96, 111, 0.3);
+  box-shadow: 0 0 0 6px var(--teal-50), 12px 12px 26px rgba(var(--deep-rgb), 0.3);
   animation: slide-in 0.9s cubic-bezier(.2, .8, .2, 1) both;
 }
 
@@ -1712,12 +1745,12 @@ button.list-item[aria-pressed="true"] {
 
 .lab-block.is-edited {
   background: var(--danger-50);
-  box-shadow: 0 0 0 3px var(--danger), 10px 10px 22px rgba(180, 82, 60, 0.2);
+  box-shadow: 0 0 0 3px var(--danger), 10px 10px 22px rgba(var(--danger-rgb), 0.2);
 }
 
 .lab-block.is-down {
-  background: #F3E7DF;
-  box-shadow: 0 0 0 2px #E2B3A5, 8px 8px 20px rgba(150, 136, 112, 0.22);
+  background: var(--down-bg);
+  box-shadow: 0 0 0 2px var(--danger-200), 8px 8px 20px rgba(var(--sh), 0.22);
 }
 
 .lab-block .num {
@@ -1773,7 +1806,7 @@ button.list-item[aria-pressed="true"] {
 }
 
 .log .err {
-  color: #F0A592;
+  color: var(--coral);
 }
 
 /* ------------------------------------------------------------------ ledger copies & network check */
@@ -1855,7 +1888,7 @@ button.list-item[aria-pressed="true"] {
 
 .copy.is-tampered {
   background: var(--danger-50);
-  box-shadow: 0 0 0 3px var(--danger), 8px 8px 18px rgba(180, 82, 60, 0.2);
+  box-shadow: 0 0 0 3px var(--danger), 8px 8px 18px rgba(var(--danger-rgb), 0.2);
   animation: shake 0.5s ease;
 }
 
@@ -1906,7 +1939,7 @@ button.list-item[aria-pressed="true"] {
   border: 0;
   border-radius: 20px;
   background: var(--well);
-  box-shadow: inset 3px 3px 8px rgba(150, 136, 112, 0.22), inset -3px -3px 8px rgba(255, 255, 255, 0.85);
+  box-shadow: inset 3px 3px 8px rgba(var(--sh), 0.22), inset -3px -3px 8px rgba(var(--hl), 0.85);
   text-align: left;
   color: var(--ink);
   min-width: 0;
@@ -1984,7 +2017,7 @@ button.list-item[aria-pressed="true"] {
   border-radius: 22px;
   background: var(--night);
   color: var(--teal-50);
-  box-shadow: 12px 12px 28px rgba(12, 26, 29, 0.35);
+  box-shadow: 12px 12px 28px rgba(var(--night-rgb), 0.35);
   animation: toast-in 0.4s cubic-bezier(.2, .8, .2, 1) both;
   font-size: 14px;
 }
@@ -2041,7 +2074,7 @@ button.list-item[aria-pressed="true"] {
 
 @keyframes pulse-danger {
   50% {
-    box-shadow: 0 0 0 3px var(--cream), 0 0 0 9px rgba(180, 82, 60, 0.25);
+    box-shadow: 0 0 0 3px var(--cream), 0 0 0 9px rgba(var(--danger-rgb), 0.25);
   }
 }
 
@@ -2114,7 +2147,7 @@ button.list-item[aria-pressed="true"] {
 
 @keyframes pulse {
   50% {
-    box-shadow: 0 0 0 7px rgba(79, 184, 180, 0.08);
+    box-shadow: 0 0 0 7px rgba(var(--accent-rgb), 0.08);
   }
 }
 
@@ -2204,8 +2237,8 @@ html.is-landing body {
 .landing {
   position: relative;
   min-height: 100vh;
-  background-color: #EFE9DF;
-  background-image: radial-gradient(rgba(16, 96, 111, 0.13) 1.2px, transparent 1.2px);
+  background-color: var(--ground);
+  background-image: radial-gradient(rgba(var(--deep-rgb), 0.13) 1.2px, transparent 1.2px);
   background-size: 22px 22px;
 }
 
@@ -2223,14 +2256,14 @@ html.is-landing body {
   width: 1040px;
   height: 1040px;
   border-radius: 50%;
-  border: 1px solid rgba(16, 96, 111, 0.1);
+  border: 1px solid rgba(var(--deep-rgb), 0.1);
   transform: translate(-50%, -50%);
 }
 
 .landing-orbit.is-dashed {
   width: 760px;
   height: 760px;
-  border: 1.5px dashed rgba(16, 96, 111, 0.16);
+  border: 1.5px dashed rgba(var(--deep-rgb), 0.16);
   animation: lp-orbit 90s linear infinite;
 }
 
@@ -2331,7 +2364,7 @@ html.is-landing body {
   padding: 0 40px;
   font-size: 20px;
   gap: 12px;
-  box-shadow: 8px 8px 20px rgba(16, 96, 111, 0.35), -6px -6px 16px rgba(255, 255, 255, 0.8);
+  box-shadow: 8px 8px 20px rgba(var(--deep-rgb), 0.35), -6px -6px 16px rgba(var(--hl), 0.8);
 }
 
 .btn-tall {
@@ -2381,7 +2414,7 @@ html.is-landing body {
   width: 48px;
   height: 48px;
   background: var(--teal-900);
-  box-shadow: 0 0 60px 20px rgba(79, 184, 180, 0.45);
+  box-shadow: 0 0 60px 20px rgba(var(--accent-rgb), 0.45);
 }
 
 .landing-hint,
@@ -2423,7 +2456,7 @@ html.is-landing body {
 
 .lp-cube svg {
   overflow: visible;
-  filter: drop-shadow(8px 12px 14px rgba(150, 136, 112, 0.35));
+  filter: drop-shadow(8px 12px 14px rgba(var(--sh), 0.35));
 }
 
 .lp-cube .num {
@@ -2467,12 +2500,12 @@ html.is-landing body {
   background: var(--night);
   color: var(--teal-50);
   font-size: 14px;
-  box-shadow: 10px 10px 24px rgba(12, 26, 29, 0.25);
+  box-shadow: 10px 10px 24px rgba(var(--night-rgb), 0.25);
 }
 
 .landing-capsule .live-dot {
   background: var(--teal-400);
-  box-shadow: 0 0 0 4px rgba(79, 184, 180, 0.25);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.25);
 }
 
 .landing-capsule .sep {
@@ -2541,7 +2574,7 @@ html.is-landing body {
   place-items: center;
   background: var(--well);
   color: var(--teal-900);
-  box-shadow: inset 3px 3px 8px rgba(150, 136, 112, 0.25), inset -3px -3px 8px rgba(255, 255, 255, 0.85);
+  box-shadow: inset 3px 3px 8px rgba(var(--sh), 0.25), inset -3px -3px 8px rgba(var(--hl), 0.85);
 }
 
 .landing-icon.is-danger {
@@ -2554,7 +2587,7 @@ html.is-landing body {
   gap: 32px;
   align-items: center;
   padding: 34px;
-  box-shadow: 12px 12px 28px rgba(12, 26, 29, 0.3);
+  box-shadow: 12px 12px 28px rgba(var(--night-rgb), 0.3);
 }
 
 .landing-scratch-text {
@@ -2569,7 +2602,7 @@ html.is-landing body {
 
 .landing-scratch-text p {
   margin: 0;
-  color: #C8E6E0;
+  color: var(--scratch-ink);
 }
 
 .landing-stats {
@@ -2582,7 +2615,7 @@ html.is-landing body {
 .landing-stats div {
   padding: 18px;
   border-radius: 20px;
-  background: #16282C;
+  background: var(--scratch-cell);
   border: 1px solid var(--night-2);
 }
 
@@ -2610,7 +2643,7 @@ html.is-landing body {
   gap: 8px 24px;
   padding: 32px 0 40px;
   margin-top: 24px;
-  border-top: 1px solid rgba(16, 96, 111, 0.14);
+  border-top: 1px solid rgba(var(--deep-rgb), 0.14);
   font-size: 14px;
   color: var(--muted);
 }
@@ -2726,8 +2759,8 @@ html.is-landing body {
 
 @keyframes lp-flash {
   0% { filter: none; }
-  35% { filter: drop-shadow(0 0 20px #4FB8B4) brightness(1.08); }
-  100% { filter: drop-shadow(0 0 10px #4FB8B4); }
+  35% { filter: drop-shadow(0 0 20px var(--teal-400)) brightness(1.08); }
+  100% { filter: drop-shadow(0 0 10px var(--teal-400)); }
 }
 
 @keyframes lp-rise {
@@ -3194,7 +3227,7 @@ html.is-landing body {
   padding: 6px 12px 6px 6px;
   border-radius: 999px;
   background: var(--well);
-  box-shadow: inset 2px 2px 6px rgba(150, 136, 112, 0.22), inset -2px -2px 6px rgba(255, 255, 255, 0.85);
+  box-shadow: inset 2px 2px 6px rgba(var(--sh), 0.22), inset -2px -2px 6px rgba(var(--hl), 0.85);
   font-size: 13px;
   font-weight: 600;
   color: var(--ink-2);
@@ -3239,14 +3272,14 @@ html.is-landing .ambient {
   width: 1180px;
   height: 1180px;
   border-radius: 50%;
-  border: 1px solid rgba(16, 96, 111, 0.08);
+  border: 1px solid rgba(var(--deep-rgb), 0.08);
   transform: translate(-50%, -50%);
 }
 
 .ambient-orbit.is-dashed {
   width: 860px;
   height: 860px;
-  border: 1.5px dashed rgba(16, 96, 111, 0.12);
+  border: 1.5px dashed rgba(var(--deep-rgb), 0.12);
   animation: lp-orbit 120s linear infinite;
 }
 
@@ -3314,7 +3347,7 @@ html.is-landing .ambient {
   width: 74px;
   height: 81px;
   overflow: visible;
-  filter: drop-shadow(6px 10px 12px rgba(150, 136, 112, 0.32));
+  filter: drop-shadow(6px 10px 12px rgba(var(--sh), 0.32));
 }
 
 .rail-cube .num {
@@ -3499,7 +3532,7 @@ html.is-landing .ambient {
   height: 3px;
   border-radius: 999px;
   background: var(--teal-400);
-  box-shadow: 0 0 14px 4px rgba(79, 184, 180, 0.55);
+  box-shadow: 0 0 14px 4px rgba(var(--accent-rgb), 0.55);
   animation: scan 1.1s ease-in-out infinite alternate;
 }
 
@@ -3532,8 +3565,8 @@ html.is-landing .ambient {
 }
 
 @keyframes cb-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 184, 180, 0); }
-  50% { box-shadow: 0 0 14px 2px rgba(79, 184, 180, 0.55); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0); }
+  50% { box-shadow: 0 0 14px 2px rgba(var(--accent-rgb), 0.55); }
 }
 
 @keyframes scan {
@@ -3568,7 +3601,7 @@ html.is-landing .ambient {
   bottom: 0;
   width: 2px;
   margin-left: -1px;
-  background-image: repeating-linear-gradient(to top, rgba(79, 184, 180, 0.55) 0 6px, transparent 6px 14px);
+  background-image: repeating-linear-gradient(to top, rgba(var(--accent-rgb), 0.55) 0 6px, transparent 6px 14px);
   background-size: 2px 14px;
   animation: stream-up 1.2s linear infinite;
 }
@@ -3583,7 +3616,7 @@ html.is-landing .ambient {
   margin-left: -5px;
   border-radius: 50%;
   background: var(--teal-900);
-  box-shadow: 0 0 0 4px rgba(79, 184, 180, 0.25);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.25);
 }
 
 .rail-chip {
@@ -3639,19 +3672,19 @@ html.is-landing .ambient {
   padding: 32px;
   border-radius: 34px;
   background: var(--card);
-  box-shadow: 14px 14px 32px rgba(150, 136, 112, 0.32), -12px -12px 28px rgba(255, 255, 255, 0.9);
+  box-shadow: 14px 14px 32px rgba(var(--sh), 0.32), -12px -12px 28px rgba(var(--hl), 0.9);
   transition: box-shadow 0.4s;
 }
 
 .vault.is-granted {
   --vault-accent: var(--teal-400);
-  box-shadow: 0 0 0 3px var(--teal-400), 0 0 60px rgba(79, 184, 180, 0.45);
+  box-shadow: 0 0 0 3px var(--teal-400), 0 0 60px rgba(var(--accent-rgb), 0.45);
 }
 
 .vault.is-denied,
 .vault.is-locked {
   --vault-accent: var(--danger);
-  box-shadow: 0 0 0 3px var(--danger), 0 0 50px rgba(180, 82, 60, 0.35);
+  box-shadow: 0 0 0 3px var(--danger), 0 0 50px rgba(var(--danger-rgb), 0.35);
 }
 
 .vault.is-denied {
@@ -3683,8 +3716,8 @@ html.is-landing .ambient {
   right: 24px;
   height: 2px;
   border-radius: 999px;
-  background: rgba(79, 184, 180, 0.55);
-  box-shadow: 0 0 16px 4px rgba(79, 184, 180, 0.25);
+  background: rgba(var(--accent-rgb), 0.55);
+  box-shadow: 0 0 16px 4px rgba(var(--accent-rgb), 0.25);
   pointer-events: none;
   animation: pv-sweep 4.5s ease-in-out infinite;
 }
@@ -3724,7 +3757,7 @@ html.is-landing .ambient {
   display: grid;
   place-items: center;
   background: var(--vault-accent);
-  box-shadow: 6px 6px 14px rgba(16, 96, 111, 0.28);
+  box-shadow: 6px 6px 14px rgba(var(--deep-rgb), 0.28);
   transition: background 0.3s;
 }
 
@@ -3762,7 +3795,7 @@ html.is-landing .ambient {
   padding: 24px 12px 16px;
   border-radius: 26px;
   background: var(--well);
-  box-shadow: inset 5px 5px 12px rgba(150, 136, 112, 0.28), inset -5px -5px 12px rgba(255, 255, 255, 0.9);
+  box-shadow: inset 5px 5px 12px rgba(var(--sh), 0.28), inset -5px -5px 12px rgba(var(--hl), 0.9);
   overflow-x: auto;
 }
 
@@ -3774,7 +3807,7 @@ html.is-landing .ambient {
   width: 3px;
   border-radius: 999px;
   background: var(--teal-400);
-  box-shadow: 0 0 18px 6px rgba(79, 184, 180, 0.45);
+  box-shadow: 0 0 18px 6px rgba(var(--accent-rgb), 0.45);
   pointer-events: none;
   animation: pv-scan 1s ease-in-out infinite alternate;
 }
@@ -3809,7 +3842,7 @@ html.is-landing .ambient {
 }
 
 .vslot polygon {
-  fill: rgba(250, 246, 240, 0.6);
+  fill: rgba(var(--cream-rgb), 0.6);
   stroke: var(--teal-200);
   stroke-width: 2.4;
   stroke-dasharray: 7 6;
@@ -3830,7 +3863,7 @@ html.is-landing .ambient {
 .vslot.is-filled .f-left { fill: var(--teal-200); }
 .vslot.is-filled .f-right { fill: var(--teal-400); }
 .vslot.is-filled .lines { display: block; }
-.vslot.is-filled svg { filter: drop-shadow(4px 8px 10px rgba(150, 136, 112, 0.35)); }
+.vslot.is-filled svg { filter: drop-shadow(4px 8px 10px rgba(var(--sh), 0.35)); }
 
 .vslot.is-new {
   animation: pv-pop 0.45s cubic-bezier(.2, .9, .3, 1.3) both;
@@ -3846,7 +3879,7 @@ html.is-landing .ambient {
 
 .vslot.is-denied polygon { stroke: var(--danger); }
 .vslot.is-denied .f-top { fill: var(--danger-50); }
-.vslot.is-denied .f-left { fill: #F0A592; }
+.vslot.is-denied .f-left { fill: var(--coral); }
 .vslot.is-denied .f-right { fill: var(--danger); }
 
 .vslot.is-falling {
@@ -3963,7 +3996,7 @@ html.is-landing .ambient {
   border: 0;
   border-radius: 18px;
   background: var(--well);
-  box-shadow: inset 4px 4px 10px rgba(150, 136, 112, 0.28), inset -4px -4px 10px rgba(255, 255, 255, 0.9);
+  box-shadow: inset 4px 4px 10px rgba(var(--sh), 0.28), inset -4px -4px 10px rgba(var(--hl), 0.9);
   color: var(--ink);
   font-family: var(--mono);
   font-size: 26px;
@@ -3972,12 +4005,12 @@ html.is-landing .ambient {
 }
 
 #passcode:focus-visible {
-  box-shadow: inset 4px 4px 10px rgba(150, 136, 112, 0.28), inset -4px -4px 10px rgba(255, 255, 255, 0.9), 0 0 0 3px var(--teal-400);
+  box-shadow: inset 4px 4px 10px rgba(var(--sh), 0.28), inset -4px -4px 10px rgba(var(--hl), 0.9), 0 0 0 3px var(--teal-400);
 }
 
 .vault.is-denied #passcode,
 .vault.is-locked #passcode {
-  box-shadow: inset 4px 4px 10px rgba(150, 136, 112, 0.28), 0 0 0 2px var(--danger);
+  box-shadow: inset 4px 4px 10px rgba(var(--sh), 0.28), 0 0 0 2px var(--danger);
 }
 
 .vault-progress {
@@ -4040,9 +4073,9 @@ html.is-landing .ambient {
 .btn-unlock:disabled {
   cursor: not-allowed;
   opacity: 1;
-  background: #E9E2D6;
+  background: var(--track-2);
   color: var(--muted);
-  box-shadow: inset 3px 3px 8px rgba(150, 136, 112, 0.25), inset -3px -3px 8px rgba(255, 255, 255, 0.85);
+  box-shadow: inset 3px 3px 8px rgba(var(--sh), 0.25), inset -3px -3px 8px rgba(var(--hl), 0.85);
 }
 
 .vault-log-box {
@@ -4065,7 +4098,7 @@ html.is-landing .ambient {
 
 .vault-log-head .live-dot {
   background: var(--teal-400);
-  box-shadow: 0 0 0 4px rgba(79, 184, 180, 0.2);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.2);
 }
 
 #vault-log {
@@ -4078,7 +4111,7 @@ html.is-landing .ambient {
 }
 
 #vault-log .muted-line {
-  color: #7FA9A3;
+  color: var(--vault-dim);
 }
 
 #vault-log .cursor {
@@ -4132,7 +4165,7 @@ html.is-landing .ambient {
   width: 120px;
   height: 132px;
   overflow: visible;
-  filter: drop-shadow(0 0 22px rgba(79, 184, 180, 0.7));
+  filter: drop-shadow(0 0 22px rgba(var(--accent-rgb), 0.7));
 }
 
 .fx-flyer span {
@@ -4149,7 +4182,7 @@ html.is-landing .ambient {
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 600;
-  box-shadow: 0 6px 16px rgba(16, 96, 111, 0.2);
+  box-shadow: 0 6px 16px rgba(var(--deep-rgb), 0.2);
   animation: pv-spark 1.6s cubic-bezier(.15, .85, .25, 1) both;
 }
 
@@ -4183,7 +4216,7 @@ html.is-landing .ambient {
   width: 48px;
   height: 48px;
   background: var(--teal-900);
-  box-shadow: 0 0 60px 20px rgba(79, 184, 180, 0.45);
+  box-shadow: 0 0 60px 20px rgba(var(--accent-rgb), 0.45);
   animation: lp-iris 1.1s cubic-bezier(.7, 0, .25, 1) both;
 }
 
@@ -4198,14 +4231,14 @@ html.is-landing .ambient {
 .vault-alarm-flash {
   position: absolute;
   inset: 0;
-  background: rgba(180, 82, 60, 0.16);
+  background: rgba(var(--danger-rgb), 0.16);
   animation: pv-alarm 1.4s ease-in-out both;
 }
 
 .vault-alarm-lines {
   position: absolute;
   inset: 0;
-  background-image: repeating-linear-gradient(0deg, rgba(180, 82, 60, 0.10) 0 2px, transparent 2px 12px);
+  background-image: repeating-linear-gradient(0deg, rgba(var(--danger-rgb), 0.10) 0 2px, transparent 2px 12px);
   animation: pv-scanlines 0.4s linear infinite;
 }
 
@@ -4219,7 +4252,7 @@ html.is-landing .ambient {
   background: var(--danger);
   color: var(--cream);
   text-align: center;
-  box-shadow: 0 0 0 6px rgba(180, 82, 60, 0.18), 0 24px 60px rgba(122, 46, 30, 0.45);
+  box-shadow: 0 0 0 6px rgba(var(--danger-rgb), 0.18), 0 24px 60px rgba(122, 46, 30, 0.45);
   animation: pv-glitch 0.6s ease-out both;
 }
 
@@ -4229,7 +4262,7 @@ html.is-landing .ambient {
   font-size: 40px;
   font-weight: 600;
   line-height: 1.05;
-  text-shadow: 2px 0 0 rgba(79, 184, 180, 0.6), -2px 0 0 rgba(122, 46, 30, 0.8);
+  text-shadow: 2px 0 0 rgba(var(--accent-rgb), 0.6), -2px 0 0 rgba(122, 46, 30, 0.8);
 }
 
 .vault-alarm-box p {
@@ -4243,15 +4276,15 @@ html.is-landing .ambient {
   margin-top: 14px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(250, 246, 240, 0.18);
+  background: rgba(var(--cream-rgb), 0.18);
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 600;
 }
 
 @keyframes pv-pop { 0% { transform: scale(0.4) translateY(14px); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; opacity: 1; } }
-@keyframes pv-flash { 0% { filter: none; } 40% { filter: drop-shadow(0 0 18px #4FB8B4) brightness(1.08); } 100% { filter: drop-shadow(4px 8px 10px rgba(150, 136, 112, 0.35)); } }
-@keyframes pv-verify { 0% { filter: none; } 50% { filter: drop-shadow(0 0 18px #4FB8B4) brightness(1.1); } 100% { filter: drop-shadow(0 0 10px rgba(79, 184, 180, 0.7)); } }
+@keyframes pv-flash { 0% { filter: none; } 40% { filter: drop-shadow(0 0 18px var(--teal-400)) brightness(1.08); } 100% { filter: drop-shadow(4px 8px 10px rgba(var(--sh), 0.35)); } }
+@keyframes pv-verify { 0% { filter: none; } 50% { filter: drop-shadow(0 0 18px var(--teal-400)) brightness(1.1); } 100% { filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.7)); } }
 @keyframes pv-key { to { transform: rotate(90deg); } }
 @keyframes pv-shake { 0%, 100% { transform: translateX(0); } 15% { transform: translateX(-14px) rotate(-0.6deg); } 30% { transform: translateX(12px) rotate(0.6deg); } 45% { transform: translateX(-10px); } 60% { transform: translateX(8px); } 75% { transform: translateX(-4px); } }
 @keyframes pv-fall { 0% { transform: none; opacity: 1; } 25% { transform: translateY(-10px) rotate(var(--r, 10deg)); opacity: 1; } 100% { transform: translateY(160px) rotate(calc(var(--r, 10deg) * 4)); opacity: 0; } }
@@ -4318,4 +4351,143 @@ html.is-landing .ambient {
   .fx-title span {
     font-size: 12px;
   }
+}
+
+/* ------------------------------------------------------------------ dark theme
+   Palette: midnight #161E2F, navy #242F49, slate #384358, peach #FFA586,
+   crimson #B51A2B, wine #541A2E. Peach takes the teal accent's place; text that
+   sat on teal fills (the --cream token) turns midnight so it stays readable on peach. */
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #161E2F;
+  --card: #242F49;
+  --well: #1D2740;
+  --track: #384358;
+  --ink: #F6E8E2;
+  --ink-2: #D5CACF;
+  --muted: #A4ADC1;
+  --teal-950: #FFC4AF;
+  --teal-900: #FFA586;
+  --teal-600: #F38B6D;
+  --teal-400: #F5876A;
+  --teal-200: #C98473;
+  --teal-100: #3D2A3F;
+  --teal-50: #2F3B58;
+  --sage: #2E3A54;
+  --sand: #4A2C36;
+  --cream: #161E2F;
+  --night: #0E1424;
+  --night-2: #2A3550;
+  --danger: #FF6B78;
+  --danger-50: #541A2E;
+  --danger-200: #8C2A3A;
+  --coral: #FF8A8F;
+  --raised: 0 12px 30px rgba(3, 6, 14, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --raised-sm: 0 6px 16px rgba(3, 6, 14, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --inset: inset 0 2px 8px rgba(3, 6, 14, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --sh: 3, 6, 14;
+  --hl: 52, 63, 88;
+  --accent-rgb: 255, 165, 134;
+  --deep-rgb: 255, 165, 134;
+  --night-rgb: 0, 0, 0;
+  --danger-rgb: 181, 26, 43;
+  --muted-rgb: 164, 173, 193;
+  --cream-rgb: 22, 30, 47;
+  --track-2: #1B2438;
+  --nav-ink: #C3BAC2;
+  --dim: #8A93A8;
+  --on-sand: #F3D9CE;
+  --on-sage: #DCE3F0;
+  --sand-hi: #E9B9A8;
+  --sage-hi: #9AA6C2;
+  --axis: #384358;
+  --warm: #B51A2B;
+  --amber: #FFD8C9;
+  --amber-line: #E0455A;
+  --amber-50: #541A2E;
+  --on-amber: #FFD3C4;
+  --stage: #1B2438;
+  --bit: #384358;
+  --down-bg: #2B1F33;
+  --scratch-ink: #E9D3CC;
+  --scratch-cell: #1B2438;
+  --vault-dim: #9AA3B8;
+  --on-night: #F6E8E2;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .landing {
+  background-image: radial-gradient(rgba(255, 165, 134, 0.07) 1.2px, transparent 1.2px);
+}
+
+/* Light text on the danger fills, which stay bright in the dark theme. */
+html[data-theme="dark"] .btn-danger,
+html[data-theme="dark"] .chip-danger,
+html[data-theme="dark"] .copy.is-tampered .avatar {
+  color: #FFF4F0;
+  background: #B51A2B;
+}
+
+/* Panels that were black on cream: keep them a step darker than the cards, with an edge. */
+html[data-theme="dark"] .dock,
+html[data-theme="dark"] .capsule,
+html[data-theme="dark"] .pow-orb,
+html[data-theme="dark"] .sha-orb,
+html[data-theme="dark"] .audit-box,
+html[data-theme="dark"] .toast,
+html[data-theme="dark"] .landing-capsule,
+html[data-theme="dark"] .landing-scratch,
+html[data-theme="dark"] .live {
+  box-shadow: inset 0 0 0 1px #384358, 0 12px 28px rgba(3, 6, 14, 0.5);
+}
+
+html[data-theme="dark"] .dock,
+html[data-theme="dark"] .capsule,
+html[data-theme="dark"] .pow-orb,
+html[data-theme="dark"] .sha-orb,
+html[data-theme="dark"] .audit-box,
+html[data-theme="dark"] .toast,
+html[data-theme="dark"] .landing-capsule,
+html[data-theme="dark"] .rail-title,
+html[data-theme="dark"] .live,
+html[data-theme="dark"] .btn-soft[aria-pressed="true"] {
+  color: var(--ink);
+}
+
+/* Light buttons on the dark panels (Replay search, Check now). */
+html[data-theme="dark"] .btn-light {
+  background: #F6E8E2;
+  color: #161E2F;
+}
+
+/* ------------------------------------------------------------------ theme toggle */
+
+.theme-toggle {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--raised-sm);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.theme-toggle:hover {
+  transform: rotate(-12deg);
+}
+
+.theme-toggle .i-sun,
+html[data-theme="dark"] .theme-toggle .i-moon {
+  display: none;
+}
+
+html[data-theme="dark"] .theme-toggle .i-sun {
+  display: block;
 }

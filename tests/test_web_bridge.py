@@ -6,11 +6,13 @@ exercised over a real loopback HTTP server.
 from __future__ import annotations
 
 import json
+import re
 import socket
 import threading
 import unittest
 import urllib.error
 import urllib.request
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from blockchain_lite.interfaces import ValidationError
@@ -319,6 +321,33 @@ class TestPasscodeGate(unittest.TestCase):
         self.assertFalse(self.gate.is_default)
         self.assertTrue(PasscodeGate().is_default)
 
+
+
+class TestThemes(unittest.TestCase):
+    """The dark theme overrides every colour token of the light one, and both pages can switch."""
+
+    STATIC = Path(__file__).resolve().parent.parent / "web" / "static"
+
+    @staticmethod
+    def _tokens(block: str) -> set:
+        return set(re.findall(r"^\s*(--[\w-]+):", block, flags=re.M))
+
+    def test_dark_theme_defines_every_colour_token(self) -> None:
+        css = (self.STATIC / "app.css").read_text(encoding="utf-8")
+        light = self._tokens(re.search(r":root \{(.*?)\n\}", css, flags=re.S).group(1))
+        dark = self._tokens(re.search(r'html\[data-theme="dark"\] \{(.*?)\n\}', css, flags=re.S).group(1))
+        fonts = {"--serif", "--sans", "--mono"}
+        self.assertEqual(light - fonts - dark, set())
+
+    def test_no_literal_colours_left_in_scripts_and_markup(self) -> None:
+        for name in ("app.js", "index.html"):
+            text = (self.STATIC / name).read_text(encoding="utf-8")
+            self.assertEqual(re.findall(r"#[0-9A-Fa-f]{6}\b", text), [], name)
+
+    def test_both_headers_have_a_theme_toggle(self) -> None:
+        html = (self.STATIC / "index.html").read_text(encoding="utf-8")
+        self.assertEqual(html.count("data-theme-toggle"), 2)
+        self.assertIn("document.documentElement.dataset.theme", html)
 
 if __name__ == "__main__":
     unittest.main()
