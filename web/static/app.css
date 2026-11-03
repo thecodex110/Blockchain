@@ -1317,7 +1317,7 @@ button.list-item[aria-pressed="true"] {
 
 .header-fields {
   display: grid;
-  grid-template-columns: 4fr 32fr 32fr 8fr 4fr 9fr;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 32fr) minmax(0, 32fr) minmax(0, 8fr) minmax(0, 4fr) minmax(0, 9fr);
   gap: 5px;
   font-size: 12px;
 }
@@ -1344,11 +1344,24 @@ button.list-item[aria-pressed="true"] {
 .try {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 10px;
+  min-width: 0;
   padding: 5px 14px;
   border-radius: 999px;
   color: var(--muted);
   animation: fade-up 0.25s ease both;
+}
+
+.try span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.try span:last-child {
+  flex: 0 0 auto;
 }
 
 .try.ok {
@@ -1937,6 +1950,14 @@ button.list-item[aria-pressed="true"] {
 
   .form-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tries {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pow-orb {
+    flex-basis: 100%;
   }
 }
 /* ------------------------------------------------------------------ landing page (#welcome) */
