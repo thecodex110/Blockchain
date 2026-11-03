@@ -276,7 +276,7 @@ The required difficulty is **computed from history, never trusted from the block
 
 **What you see:** with **Auto-mine** on, blocks come in under a second at difficulty 4, so the difficulty climbs by one bit every 4 blocks until a block takes about 10 seconds. On this machine (about 250,000 hashes per second with the fast backend) that happens around 21–22 bits. With the slow bit-level SHA-256 it settles much lower, because the same 10 seconds buys far fewer hashes. That is the point of retargeting: block time stays steady whatever the hash power.
 
-**Who is mining?** In this project there is one node and one miner, the demo **Miner** wallet. Every block's coinbase pays that wallet. There is no race between competing miners; difficulty adjusts against the clock. Auto-mine also mines blocks with an empty mempool, which contain only the coinbase. That is why the total supply keeps rising by 50 per block while it runs.
+**Who is mining?** In this project there is one node and one miner, the demo **Miner** wallet. Every block's coinbase pays that wallet. There is no race between competing miners; difficulty adjusts against the clock. When the mempool is empty, the web bridge first adds a few small signed transfers between demo wallets (`--demo-traffic`, default 6; `0` turns it off), so every new block has a real Merkle tree. Transfers only move coins; the coinbase is what mints them, which is why the total supply keeps rising by 50 per block while Auto-mine runs.
 
 ---
 
@@ -465,7 +465,7 @@ The **demo chain** used by the terminal and the web app: Genesis gives 20 named 
 
 ## 12. Tests
 
-`python3 run_tests.py` runs 126 tests across 14 modules (one is skipped):
+`python3 run_tests.py` runs 128 tests across 14 modules (one is skipped):
 
 | Module | Covers |
 | :--- | :--- |

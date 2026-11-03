@@ -45,7 +45,7 @@ Start with [[Project Overview]] → [[Architecture]] → [[Life of a Transaction
 |---|---|
 | Language | Python ≥ 3.11 (also runs on 3.9.6 locally) |
 | Dependencies | none (stdlib only; `hashlib` only in opt-in `fast_hash.py`) |
-| Tests | 126 tests, 14 modules, 1 skipped — all pass (~41 s) |
+| Tests | 128 tests, 14 modules, 1 skipped — all pass (~41 s) |
 | Hash | bit-level FIPS 180-4 SHA-256 (fast hashlib backend optional, ~650× faster) |
 | Signatures | custom RSA, demo keys 384-bit |
 | Consensus | PoW, leading-zero-bit difficulty, most cumulative work wins |

@@ -29,6 +29,7 @@ import json
 import logging
 import mimetypes
 import queue
+import random
 import sys
 import threading
 import time
@@ -123,8 +124,11 @@ class BridgeState:
         rsa_bits: int = 384,
         audit_interval: float = 20.0,
         passcode: str = DEFAULT_PASSCODE,
+        demo_traffic: int = 0,
     ) -> None:
         self.ledger = ledger
+        # Transfers to add before mining an empty mempool, so new blocks have a real Merkle tree.
+        self.demo_traffic = demo_traffic
         self.gate = PasscodeGate(passcode)
         self.wallets = wallets
         self.hasher = hasher
@@ -358,6 +362,8 @@ class BridgeState:
 
     def mine(self, with_trace: bool = True) -> Dict[str, Any]:
         """Mine the mempool into a block, announce it, and announce any difficulty retarget."""
+        if self.demo_traffic and self.ledger.mempool_size == 0:
+            self.add_demo_traffic(self.demo_traffic)
         miner = self._wallet(MINER_LABEL)
         block, stats = self.ledger.mine_pending_transactions(miner_address=miner.address)
         self.network.sync()  # gossip the new block to every ledger copy
@@ -385,6 +391,24 @@ class BridgeState:
         if self.on_block_mined is not None:
             self.on_block_mined(trace)
         return trace
+
+    def add_demo_traffic(self, count: int) -> int:
+        """Submit up to `count` small signed transfers between random demo wallets; returns how many."""
+        senders = [n for n, w in self.wallets.items()
+                   if n != MINER_LABEL and self.ledger.get_balance(w.address) >= 3]
+        random.shuffle(senders)
+        sent = 0
+        for name in senders:
+            if sent >= count:
+                break
+            to = random.choice([n for n in self.wallets if n not in (name, MINER_LABEL)])
+            amount = random.randint(1, min(10, self.ledger.get_balance(self.wallets[name].address) - 1))
+            try:
+                self.send({"from": name, "to": to, "amount": amount, "fee": 1})
+                sent += 1
+            except BlockchainLiteError:  # coins already claimed by a pending tx: try the next sender
+                continue
+        return sent
 
     def tamper(self, body: Dict[str, Any]) -> Dict[str, Any]:
         block = self._block(body.get("block"))
@@ -650,6 +674,7 @@ def build_state(
     max_difficulty: int = 24,
     audit_interval: float = 20.0,
     passcode: str = DEFAULT_PASSCODE,
+    demo_traffic: int = 0,
 ) -> BridgeState:
     """Create the demo ledger (10 pre-mined blocks, 20 wallets + Miner) behind a bridge.
 
@@ -674,7 +699,8 @@ def build_state(
         max_difficulty=max_difficulty,
     )
     return BridgeState(ledger, wallets, hasher, on_block_mined=on_block_mined,
-                       rsa_bits=rsa_bits, audit_interval=audit_interval, passcode=passcode)
+                       rsa_bits=rsa_bits, audit_interval=audit_interval, passcode=passcode,
+                       demo_traffic=demo_traffic)
 
 
 class BridgeServer(ThreadingHTTPServer):
@@ -722,6 +748,9 @@ def main(argv: Optional[List[str]] = None) -> None:
                         help="seconds between network checks of everyone's ledger copy (default 20)")
     parser.add_argument("--passcode", default=DEFAULT_PASSCODE,
                         help="8-digit passcode for the welcome page (default %(default)s)")
+    parser.add_argument("--demo-traffic", type=int, default=6,
+                        help="signed demo transfers to add when mining an empty mempool, so every block "
+                             "has a Merkle tree; 0 = mine empty blocks (default %(default)s)")
     parser.add_argument("--render", action="store_true", help="render Manim videos after each mined block")
     parser.add_argument("--render-quality", default="l", choices=["l", "m", "h"])
     args = parser.parse_args(argv)
@@ -758,6 +787,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         max_difficulty=args.max_difficulty,
         audit_interval=args.audit_interval,
         passcode=args.passcode,
+        demo_traffic=args.demo_traffic,
     )
     state_holder["s"] = state
     if state.gate.is_default:

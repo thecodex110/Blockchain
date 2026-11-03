@@ -55,7 +55,7 @@ Shown at `http://127.0.0.1:8080` (or `#welcome`), in the same cream-and-teal loo
 | **Floating blocks** | The real last five blocks of the chain, joined by moving links. The bold leading zeros of each hash are its proof-of-work |
 | **Black capsule** | Live numbers: height, current difficulty, and how many ledger copies are in sync |
 | **Four cards** | Explorer, Block Forge, Tamper Lab, People — click one to jump straight to that page |
-| **Built from first principles** | 126 tests, no third-party packages in the core, the number of ledger copies, and the difficulty range so far |
+| **Built from first principles** | 128 tests, no third-party packages in the core, the number of ledger copies, and the difficulty range so far |
 
 Click the **Blockchain-Lite** logo in the app to come back to the welcome page.
 
@@ -483,7 +483,8 @@ Front-end files: `web/static/index.html` (layout), `web/static/app.css` (look an
 | Send fails with *already spent by a pending transaction* | That wallet's coin is already used by a transaction in the mempool. Mine a block, or send from another wallet |
 | Send fails with *Insufficient spendable balance* | Pick a smaller amount or another sender; hover the circles to see balances |
 | No video in Block Forge | Manim is optional and not installed. See [`Project_Guide.md` §10](Project_Guide.md#10-manim-animations) |
-| Supply keeps rising while Auto-mine runs | Expected: every block, even an empty one, pays the Miner 50 coins |
+| Supply keeps rising while Auto-mine runs | Expected: every block pays the Miner 50 coins |
+| New blocks contain transfers you did not send | The bridge adds a few demo transfers when the mempool is empty, so every block has a Merkle tree. Start it with `--demo-traffic 0` to mine coinbase-only blocks |
 | A new person cannot send | Their starting coins arrive only in the next block: press **Add block to blockchain** first |
 | A tampered copy is not repaired | Repair happens at the next network check (see the countdown), or press **Check now** |
 | The passcode is refused | The demo default is `12345678` unless the bridge was started with `--passcode`; the server log prints the default at startup. After five wrong tries wait for the 30-second lock to clear |

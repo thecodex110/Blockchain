@@ -269,6 +269,25 @@ class TestBridgeRetargeting(unittest.TestCase):
         self.assertFalse(state.consensus()["retargeting"])
 
 
+class TestDemoTraffic(unittest.TestCase):
+    """With demo traffic on, mining an empty mempool still produces a block with a Merkle tree."""
+
+    def test_empty_mempool_gets_signed_transfers_before_mining(self) -> None:
+        state = build_state(fast_hash=True, retarget_interval=0, demo_traffic=5)
+        supply = state.ledger.total_supply
+        for _ in range(3):
+            self.assertEqual(state.ledger.mempool_size, 0)
+            state.mine(with_trace=False)
+            self.assertGreater(len(state.ledger.tip.transactions), 1)
+        self.assertEqual(state.ledger.total_supply, supply + 3 * 50)  # only coinbases mint coins
+        self.assertTrue(state.ledger.validate_full_chain(force=True).is_valid)
+
+    def test_off_by_default_mines_coinbase_only(self) -> None:
+        state = build_state(fast_hash=True, retarget_interval=0)
+        state.mine(with_trace=False)
+        self.assertEqual(len(state.ledger.tip.transactions), 1)
+
+
 
 class TestPasscodeGate(unittest.TestCase):
     def setUp(self) -> None:
