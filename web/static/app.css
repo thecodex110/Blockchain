@@ -1374,9 +1374,10 @@ button.list-item[aria-pressed="true"] {
   display: flex;
   flex-direction: column;
   align-items: center;
+  align-self: flex-start;
   gap: 14px;
-  padding: 24px 18px;
-  border-radius: 125px;
+  padding: 26px 18px 18px;
+  border-radius: 36px;
   background: var(--night);
   color: var(--teal-50);
 }
