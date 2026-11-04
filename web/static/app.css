@@ -4454,9 +4454,10 @@ html[data-theme="dark"] {
   --night-cream: #EFE8D6;
 }
 
-/* Velvet, kept cheap: pile grain, crushed-velvet folds, a diagonal sheen, a lit corner and
-   a dark vignette are one fixed layer painted once. The only motion is a slow transform
-   on a separate soft-light layer, which the GPU composites. */
+/* Velvet, kept cheap: one smooth emerald gradient (a lit corner, a soft second glow and a
+   dark vignette) under the dot grid, painted once on a fixed layer. No tiled noise images:
+   their tile edges showed as box seams. The only motion is a slow transform on a separate
+   soft-light layer, which the GPU composites. */
 html[data-theme="dark"] body {
   background: #072019;
 }
@@ -4478,12 +4479,10 @@ html[data-theme="dark"] body::before {
   background-color: #0C3A2D;
   background-image:
     radial-gradient(rgba(239, 232, 214, 0.14) 1.2px, transparent 1.2px),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008 0.022' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.75 0 0 0 0 1 0 0 0 0 0.85 0 0 0 0.14 -0.02'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"),
-    linear-gradient(118deg, transparent 18%, rgba(28, 106, 81, 0.4) 34%, transparent 48%, rgba(3, 17, 12, 0.6) 66%, transparent 82%),
-    radial-gradient(ellipse 70% 55% at 22% 12%, rgba(28, 106, 81, 0.75), transparent 70%),
-    radial-gradient(ellipse 120% 100% at 50% 45%, transparent 40%, #03110C 100%);
-  background-size: 22px 22px, 180px 180px, 600px 600px, auto, auto, auto;
+    radial-gradient(ellipse 75% 60% at 22% 10%, rgba(28, 106, 81, 0.7), transparent 72%),
+    radial-gradient(ellipse 60% 50% at 85% 85%, rgba(19, 78, 60, 0.45), transparent 75%),
+    radial-gradient(ellipse 130% 110% at 50% 40%, transparent 45%, rgba(3, 17, 12, 0.85) 100%);
+  background-size: 22px 22px, auto, auto, auto;
 }
 
 html[data-theme="dark"] body::after {
