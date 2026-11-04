@@ -20,6 +20,15 @@
         ],
         "createdAt": "2026-11-04T07:59:10.901Z",
         "reason": "User asked for the dark theme background as one emerald gradient (lit corner, soft glow, vignette under the dot grid); the radial wash is that requested velvet backdrop"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "web/static/index.html"
+        ],
+        "createdAt": "2026-11-04T08:05:21.638Z",
+        "reason": "User chose the Ivory and emerald light theme from a set of four palettes; the ivory ground is that deliberate choice, paired with emerald, antique gold and garnet"
       }
     ]
   }
