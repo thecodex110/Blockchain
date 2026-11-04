@@ -1,10 +1,17 @@
-
-
 services:
+  # Web app at http://127.0.0.1:8080 (docker compose up web).
+  web:
+    build: .
+    image: blockchain-lite:local
+    container_name: blockchain-lite-web
+    ports:
+      - "127.0.0.1:8080:8080"
+
   terminal:
     build: .
     image: blockchain-lite:local
     container_name: blockchain-lite-terminal
+    profiles: ["terminal"]
     stdin_open: true
     tty: true
     command: ["run_terminal.py", "--fast-hash"]

@@ -1,0 +1,19 @@
+# Keep the image to what the app and its tests need.
+.git
+.gitignore
+.claude
+.impeccable
+.dockerignore
+Dockerfile
+docker-compose.yml
+obsidian
+*.pdf
+__pycache__/
+*.py[cod]
+.coverage
+htmlcov/
+.venv
+venv/
+web/static/renders/
+*.bclt
+.DS_Store

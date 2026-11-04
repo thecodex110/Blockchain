@@ -28,6 +28,7 @@ import ipaddress
 import json
 import logging
 import mimetypes
+import os
 import queue
 import random
 import sys
@@ -738,7 +739,8 @@ def _is_loopback(host: str) -> bool:
 def main(argv: Optional[List[str]] = None) -> None:
     parser = argparse.ArgumentParser(description="Blockchain-Lite web frontend bridge")
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8080")),
+                        help="port to listen on (default: $PORT, else 8080)")
     parser.add_argument(
         "--bit-level-hash", action="store_true",
         help="use the from-scratch bit-level SHA-256 (slow) instead of the bit-identical hashlib backend",

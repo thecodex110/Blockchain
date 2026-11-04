@@ -130,9 +130,15 @@ python tools/bundle.py
 
 ## 5. Containerized Deployment (Docker & Compose)
 
-The image runs as a non-root user and executes the full test-suite during the build.
+The image runs as a non-root user, executes the full test-suite during the build, and by default serves the web app on port 8080 (with a health check on `/api/state`).
 
 ```bash
+# Web app at http://127.0.0.1:8080:
+docker compose up web
+# or, without Compose:
+docker build -t blockchain-lite .
+docker run --rm -p 127.0.0.1:8080:8080 blockchain-lite
+
 # Interactive terminal console:
 docker compose run --rm terminal
 
