@@ -68,6 +68,9 @@ MAX_TRACE_ATTEMPTS = 64
 SSE_HEARTBEAT_SECONDS = 15.0
 MINER_LABEL = "Miner"
 MAX_NAME_LENGTH = 20
+# Each person keeps a full ledger copy that every network check validates; cap it so a
+# public deployment cannot be slowed down by adding people without end.
+MAX_PEOPLE = 50
 
 
 # ============================================================================
@@ -441,6 +444,8 @@ class BridgeState:
         if isinstance(fund, bool) or not isinstance(fund, int) or fund < 0:
             raise ValidationError("Starting coins must be a whole number, 0 or more")
         with self._people_lock:
+            if len(self.wallets) >= MAX_PEOPLE:
+                raise ValidationError(f"The network is full ({MAX_PEOPLE} people)")
             if name.lower() in {n.lower() for n in self.wallets}:
                 raise ValidationError(f"{name} already exists")
             wallet = Wallet.generate(label=name, bit_length=self.rsa_bits)

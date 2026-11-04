@@ -231,6 +231,14 @@ class TestLedgerCopies(unittest.TestCase):
             with self.assertRaises(ValidationError, msg=name):
                 self.state.add_person({"name": name})
 
+    def test_people_are_capped(self) -> None:
+        from unittest import mock
+        with mock.patch("web.bridge.MAX_PEOPLE", len(self.state.wallets) + 1):
+            self.state.add_person({"name": "Ravi"})
+            with self.assertRaises(ValidationError):
+                self.state.add_person({"name": "Meera"})
+        self.assertNotIn("Meera", self.state.wallets)
+
 
 class TestBridgeRetargeting(unittest.TestCase):
     """Blocks mined faster than the target raise difficulty; slower ones lower it."""
