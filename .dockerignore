@@ -1,7 +1,6 @@
 # Keep the image to what the app and its tests need.
 .git
 .gitignore
-.claude
 .impeccable
 .dockerignore
 Dockerfile
