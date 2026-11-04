@@ -1084,6 +1084,8 @@ button:disabled {
   background: var(--teal-50);
   font-size: 13px;
   color: var(--teal-900);
+  /* Error texts quote 64-character hashes; let them wrap instead of spilling out of the box. */
+  overflow-wrap: anywhere;
 }
 
 .form-note.is-error {
