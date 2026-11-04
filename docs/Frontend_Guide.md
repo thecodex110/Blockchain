@@ -9,7 +9,7 @@ For how the blockchain itself works, read [`Project_Guide.md`](Project_Guide.md)
 ## Contents
 
 1. [Starting the app](#1-starting-the-app)
-2. [The top bar](#2-the-top-bar)
+2. [The top bar](#2-the-top-bar), themes and [phone view](#22-phone-view)
 3. [Explorer page](#3-explorer-page)
 4. [Block Forge page](#4-block-forge-page)
 5. [Tamper Lab page](#5-tamper-lab-page) and [People page](#5a-people-page)
@@ -115,6 +115,22 @@ The margin rails appear when the window is at least 1560 px wide (there is no sp
 ### 2.1 Dark and light themes
 
 The app opens in a **dark theme**, *Emerald crown velvet*: a jewel-green velvet background (`#0C3A2D`) with **antique gold** `#C2A057` as the accent and **ivory** `#EFE8D6` for text, plus garnet `#C0505E` only for warnings. The background is one smooth emerald gradient (a lit corner, a soft second glow and a dark vignette) with the same dot grid as the light theme in ivory, and a soft green light drifting slowly across it. Cards are deep emerald with a thin gold edge; headings are gold, the current page in the top menu is an ivory pill, and primary buttons are gold. In the Merkle tree the chosen transaction is solid gold, the recomputed path is gold-outlined and the proof hashes are garnet; mining bars that needed more than `2^D` hashes are garnet too. The texture is painted once and only the light layer moves, by a GPU transform, so the page stays smooth. With the operating system's *reduce motion* setting on, the background stays still. The **light theme** is the original cream-and-teal look, with the same crimson `#B51A2B` for warnings and tampering, Merkle proof hashes and mining bars that took more than `2^D` hashes. Every colour is a CSS token in `web/static/app.css` (`:root` for light, `html[data-theme="dark"]` for dark), so switching is instant and nothing reloads. Where this guide names a colour (teal, amber, dark), it describes the light theme; the dark theme uses the matching colour from its own palette.
+
+### 2.2 Phone view
+
+On a screen 720px wide or narrower the app switches to a phone layout, in both themes:
+
+| Part | On a phone |
+| :--- | :--- |
+| Top bar | Only the logo and the sun / moon button. It stays pinned to the top while you scroll |
+| Page switcher | Moves to a **tab bar at the bottom** of the screen, with an icon and a short name for each page (Explorer, Forge, Tamper, People). The current page is a filled pill |
+| Explorer stats | Chain height and total supply sit side by side; the tip hash card spans the full width |
+| Gauges | One row you swipe sideways; each gauge snaps into place |
+| Cards | Slightly tighter padding and smaller headings so more fits on screen |
+| Toasts | Appear just above the bottom tab bar |
+| Welcome page | The menu becomes one scrolling row under the logo |
+
+The layout respects the notch and home bar (`env(safe-area-inset-*)`). To keep scrolling smooth on phones and touch screens, the moving background light and the decorative orbits are switched off, shadows are lighter, and sections below the screen are not drawn until you scroll to them (`content-visibility: auto`). The phone rules are the last section of `web/static/app.css`.
 
 ---
 
