@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-11-03T21:27:52.869Z",
         "reason": "Lines 3708-3711 are .vault-bracket corner brackets (two borders each forming an L at the vault's corners, from commit 30ed8f2), not one-sided card accents"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          "web/static/index.html"
+        ],
+        "createdAt": "2026-11-04T07:59:10.901Z",
+        "reason": "User asked for the dark theme background as one emerald gradient (lit corner, soft glow, vignette under the dot grid); the radial wash is that requested velvet backdrop"
       }
     ]
   }
