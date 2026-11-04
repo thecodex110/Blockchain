@@ -678,6 +678,9 @@
   // ------------------------------------------------------------------ live events
 
   function setLive(on, text) {
+    // The top bar no longer shows a connection pill; keep the status in the tab title instead.
+    document.title = on ? 'Blockchain-Lite Explorer' : `${text} — Blockchain-Lite`;
+    if (!$('live')) return;
     $('live').classList.toggle('is-on', on);
     // "Live · host": the host part hides on narrow screens so the pill stays on one line.
     const [head, ...rest] = text.split(' · ');

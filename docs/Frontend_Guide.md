@@ -110,7 +110,6 @@ The margin rails appear when the window is at least 1560 px wide (there is no sp
 | :--- | :--- |
 | **Blockchain-Lite** logo | Goes back to the welcome page |
 | **Explorer · Block Forge · Tamper Lab · People** | Page switcher. The raised pill is the page you are on |
-| **Live pill** (black, right) | Connection to the bridge's live event stream. Pulsing dot + `Live · 127.0.0.1:8080` = connected. `Reconnecting…` = the stream dropped and the browser is retrying. `Bridge unreachable: …` = the server is not running |
 | **Sun / moon button** (far right) | Switches between the dark theme (the default) and the light theme. The choice is remembered in this browser. The same button sits at the top right of the welcome page |
 
 ### 2.1 Dark and light themes
@@ -500,7 +499,7 @@ Front-end files: `web/static/index.html` (layout), `web/static/app.css` (look an
 
 | Symptom | Likely cause and fix |
 | :--- | :--- |
-| Live pill says *Bridge unreachable* | The server is not running. Start `python3 -m web.bridge` and reload |
+| The browser tab title says *Bridge unreachable* or *Reconnecting…* | The server is not running or restarted. Start `python3 -m web.bridge` and reload |
 | *Reconnecting…* after restarting the bridge | Reload the page: the restarted bridge has a brand-new chain |
 | Mine takes a long time | Difficulty has climbed (each bit doubles the work). Wait, or restart the bridge to go back to difficulty 4 |
 | Server log shows `Auto-miner retry: … exhausted 10000000 attempts` | At high difficulty the miner sometimes runs out of nonces for one timestamp. It retries with a new timestamp automatically; nothing is wrong |
